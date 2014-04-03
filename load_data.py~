@@ -1,0 +1,39 @@
+import os.path
+
+from collections import Iterable
+from nilearn.input_data import MultiNiftiMasker
+
+
+def _check_arguments(data_dict):
+    str_out = ""
+    if "dataset" not in data_dict.keys():
+        raise LookupError("'dataset' has not been defined by user")
+    if data_dict["dataset"] == "hcp":
+        for key in {"base_dir", "task_id", "scan_mode", "subj_id"}:
+            if not key in data_dict.keys():
+                str_out += ", " + key if len(str_out) >= 1 else key
+
+        if len(str_out) >= 1:
+            raise LookupError("Missing arguments for dataset '{}': ".format(
+                data_dict["dataset"]) + str_out)
+
+        data_path = os.path.join(data_dict["base_dir"],
+                                 "HCP/Q2",
+                                 format(data_dict["subj_id"]),
+                                 "MNINonLinear/Results",
+                                 "tfMRI_{}_{}".format(data_dict["task_id"],
+                                                      data_dict["scan_mode"]),
+                                 "tfMRI_{}_{}.nii.gz".format(
+                                     data_dict["task_id"],
+                                     data_dict["scan_mode"]))
+    return data_path
+
+
+def get_paths(func):
+    def check_data_set(niimgs):
+        if isinstance(niimgs, Iterable):
+            return [check_data_set(niimg) for niimg in niimgs]
+        else:
+            return _check_arguments(niimgs)
+
+MultiNiftiMasker.fit = get_paths(MultiNiftiMasker.fit)
