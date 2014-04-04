@@ -13,7 +13,7 @@ def get_all_paths(data_set=None):
             df_.append(get_all_paths(ds))
         df = pandas.concat(df_, keys=data_sets)
     elif data_set.startswith("ds") or data_set == "henson2010faces":
-        base_path = os.path.join("/home/storage/workspace/brainpedia/preproc/",
+        base_path = os.path.join("/storage/workspace/brainpedia/preproc/",
                                  data_set)
         with open(os.path.join(base_path, "scan_key.txt")) as file_:
             TR = file_.readline()[3:-1]
@@ -54,7 +54,7 @@ def get_all_paths(data_set=None):
 
         df = DataFrame(list_)
     elif data_set == "hcp":
-        base_path = os.path.normpath("/home/storage/data/HCP/Q2/")
+        base_path = os.path.normpath("/storage/data/HCP/Q2/")
         for fun_path in glob.iglob(os.path.join(base_path,
                                                 "*/MNINonLinear/Results/",
                                                 "*/*.nii.gz")):
