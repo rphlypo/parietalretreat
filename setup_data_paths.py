@@ -1,97 +1,118 @@
-import load_data
 import glob
-import re
 import os.path
-import itertools
-reload(load_data)
+from pandas import DataFrame
+import pandas
 
 
-def get_subject_ids(data_set):
-    """
-    for a given dataset, get the different subjects as a list
+def get_all_paths(data_set=None):
+    list_ = list()
+    if data_set is None:
+        df_ = list()
+        data_sets = {"hcp", "henson2010faces", "ds105", "ds107"}
+        for ds in data_sets:
+            df_.append(get_all_paths(ds))
+        df = pandas.concat(df_, keys=data_sets)
+    elif data_set.startswith("ds") or data_set == "henson2010faces":
+        base_path = os.path.join("/home/storage/workspace/brainpedia/preproc/",
+                                 data_set)
+        with open(os.path.join(base_path, "scan_key.txt")) as file_:
+            TR = file_.readline()[3:-1]
+        for fun_path in glob.iglob(os.path.join(base_path,
+                                                "sub*/model/model*/"
+                                                "BOLD/task*/bold.nii.gz")):
+            head, tail = os.path.split(fun_path)
+            tail = [tail]
+            while head != "/":
+                head, t = os.path.split(head)
+                tail.append(t)
+            tail.reverse()
+            subj_id = tail[5][-3:]
+            model = tail[7][-3:]
+            task, run = tail[9].split("_")
 
-    this allows for setting up the lists of the data paths
-    but is also convenient for sampling of train-test splitting based
-    on the subject list
+            tmp_base = os.path.split(os.path.split(fun_path)[0])[0]
 
-    arguments:
-    ---------
-    data_set: string
-        at this moment the only datasets that are supported are
-        "hcp", "henson2010faces", or openfmri datasets "ds???"
+            anat = os.path.join(tmp_base,
+                                "anatomy",
+                                "highres{}.nii.gz".format(model[-3:]))
 
-    returns:
-    -------
-    subj_ids: list of strings with subject ids in the dataset
-    """
-    if data_set == "hcp":
-        # subjects from HCP
-        base_dir = "/home/storage/data/HCP/Q2"
-        subj_str = "[0-9]" * 6
-    elif data_set.lower()[:2] == "ds" or data_set == "henson2010faces":
-        # subject from any openfmri data set
-        base_dir = os.path.join("/home/storage/workspace/brainpedia/preproc",
-                                data_set)
-        subj_str = "sub" + "[0-9]" * 3
+            onsets = glob.glob(os.path.join(tmp_base, "onsets",
+                                            "task{}_run{}".format(task, run),
+                                            "cond*.txt"))
 
-    return _subject_ids(base_dir, subj_str)
+            confds = os.path.join(os.path.split(fun_path)[0], "motion.txt")
+            list_.append({"subj_id": subj_id,
+                          "model": model,
+                          "task": task[-3:],
+                          "run": run[-3:],
+                          "func": fun_path,
+                          "anat": anat,
+                          "confds": confds,
+                          "TR": TR})
+            if onsets:
+                list_[-1]["onsets"] = onsets
+
+        df = DataFrame(list_)
+    elif data_set == "hcp":
+        base_path = os.path.normpath("/home/storage/data/HCP/Q2/")
+        for fun_path in glob.iglob(os.path.join(base_path,
+                                                "*/MNINonLinear/Results/",
+                                                "*/*.nii.gz")):
+
+            head, tail = os.path.split(fun_path)
+            if head[-2:] not in ["LR", "RL"]:
+                continue
+            tail = [tail]
+            while head != "/":
+                head, t = os.path.split(head)
+                tail.append(t)
+            if tail[0][:-7] != tail[1]:
+                continue
+            tail.reverse()
+            subj_id = tail[4]
+            task = tail[7][6:-3]
+            if tail[7].startswith("rfMRI"):
+                run = tail[7][-4]
+                task = task[:-1]
+            mode = tail[7][-2:]
+
+            anat = os.path.join(base_path, subj_id, "MNINonLinear/T1w.nii.gz")
+
+            confds = os.path.join(os.path.split(fun_path)[0],
+                                  "Movement_Regressors.txt")
+            list_.append({"subj_id": subj_id,
+                          "task": task,
+                          "mode": mode,
+                          "func": fun_path,
+                          "anat": anat,
+                          "confds": confds,
+                          "TR": 0.72})
+            if tail[8].startswith("rfMRI"):
+                list_[-1]["run"] = run
+            else:
+                onsets = [onset
+                          for onset in glob.glob(os.path.join(
+                              os.path.split(fun_path)[0], "EVs/*.txt"))
+                          if os.path.split(onset)[1][0] != "S"]
+                list_[-1]["onsets"] = onsets
+        df = DataFrame(list_)
+    return df
 
 
-def _subject_ids(base_dir, subj_str):
-    regexp = re.compile(os.path.join(base_dir, format(subj_str)))
-    subject_paths = glob.glob(os.path.join(base_dir, "*"))
-    subject_paths = [p for p in subject_paths if regexp.match(p)]
-    return [os.path.basename(subj_path) for subj_path in subject_paths]
-
-
-def get_hcp_task_files(subject_list, session_list, scan_mode_list,
-                       task_list):
-    """ obtain the hcp file pointers
-    """
-    keys = ("func", "anat", "onsets", "conf",
-            "subj_id", "session", "scan_mode", "task")
-    values = ("/storage/data/HCP/Q2/{subj_id}/MNINonLinear/Results/" +
-              "tfMRI_{task}_{scan_mode}/tfMRI_{task}_{scan_mode}.nii.gz",
-              "/storage/data/HCP/Q2/{subj_id}/MNINonLinear/T1w.nii.gz",
-              "/storage/data/HCP/Q2/{subj_id}/MNINonLinear/Results/" +
-              "tfMRI_{task}_{scan_mode}/EVs/",
-              "/storage/data/HCP/Q2/{subj_id}/MNINonLinear/Results/" +
-              "tfMRI_{task}_{scan_mode}/Movement_Regressors.txt")
-
-    list_of_dicts = [dict(zip(*[keys, values + spec_values]))
-                     for spec_values in
-                     itertools.product(subject_list,
-                                       session_list,
-                                       scan_mode_list,
-                                       task_list)]
-    return load_data.dict_2_paths(list_of_dicts)
-
-
-def get_ds_task_files(subject_list, session_list, task_list, run_list,
-                      model_list, cond_list):
-    """
-    """
-    keys = ("func", "anat", "onsets", "conf",
-            "subj_id", "session", "task")
-    values = ("/storage/workspace/brainpedia/preproc/{study}/" +
-              "sub{subj_id}/model/model{model_id}/BOLD/task{task_id}_" +
-              "run{run_id}/bold.nii.gz",
-              "/storage/workspace/brainpedia/preproc/{study}/" +
-              "sub{subj_id}/model/model{model_id}/anatomy/" +
-              "highres{model_id}.nii.gz",
-              "/storage/workspace/brainpedia/preproc/{study}/" +
-              "sub{subj_id}/model/model{model_id}/onsets/" +
-              "task{task_id}_run{run_id}/cond{cond_id}.txt",
-              "/storage/workspace/brainpedia/preproc/{study}/" +
-              "sub{subj_id}/model/model{model_id}/BOLD/task{task_id}_" +
-              "run{run_id}/motion.txt")
-
-    list_of_dicts = [dict(zip(*[keys, values + spec_values]))
-                     for spec_values in
-                     itertools.product(subject_list,
-                                       session_list,
-                                       task_list,
-                                       run_list,
-                                       model_list,
-                                       cond_list)]
-    return load_data.dict_2_paths(list_of_dicts)
+if __name__ == "__main__":
+    from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
+    from joblib import Memory, Parallel, delayed
+    from sklearn.base import clone
+    mem = Memory(cachedir="/storage/workspace/rphlypo/retreat/dump/")
+    df = get_all_paths()
+    mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=10)
+    mask_img = mnm.fit(list(df["func"]))
+    nmm = NiftiMapsMasker(
+        maps_img=os.path.join("/usr/share/fsl/data/atlases/HarvardOxford/",
+                              "HarvardOxford-cortl-prob-2mm.nii.gz"),
+        mask_img=mask_img, detrend=True, fwhm=5, standardize=True,
+        low_pass=None, high_pass=None, memory=mem)
+    fit_transform = mem.cache(clone(nmm).fit_transform)
+    region_ts = Parallel(n_jobs=10)(delayed(fit_transform)(niimg,
+                                                           n_hv_confounds=5)
+                                    for niimg in list(df["func"]))
