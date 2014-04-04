@@ -26,6 +26,8 @@ def _get_paths(data_dict):
         path[data_type] = os.path.normpath(
             data_dict[data_type].format(**data_dict))
 
+    if not all([os.path.exists(p) for p in path.values()]):
+        return None
     return path
 
 
@@ -61,6 +63,6 @@ def dict_2_paths(arg_list):
         paths that are formatted using the arguments from the dictionaries
     """
     if isinstance(arg_list, Iterable) and not isinstance(arg_list, dict):
-        return [dict_2_paths(arg) for arg in arg_list]
+        return [dict_2_paths(arg) for arg in arg_list if arg is not None]
     else:
         return _get_paths(arg_list)
