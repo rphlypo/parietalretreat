@@ -16,7 +16,7 @@ def compute_mvt_confounds(movconf_file):
         
     Returns
     =======
-    confounds_data: array
+    confounds_data_all: array
         mouvement parameters, derivatives and squares
     confounds_labels: list of str
         labels of the mouvement confounds
