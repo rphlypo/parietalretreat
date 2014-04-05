@@ -115,9 +115,11 @@ if __name__ == "__main__":
     print "Loading all paths and variables into memory"
     df = get_all_paths()
     target_affine_ = nibabel.load(df["func"][0]).get_affine()
+    target_shape_ = nibabel.load(df["func"][0]).shape
     print "preparing and running MultiNiftiMasker"
     mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=10,
-                           verbose=10, target_affine=target_affine_)
+                           verbose=10, target_affine=target_affine_,
+                           target_shape=target_shape_)
     mask_img = mnm.fit(list(df["func"]))
     print "preparing and running NiftiMapsMasker"
     nmm = NiftiMapsMasker(
