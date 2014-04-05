@@ -103,12 +103,15 @@ if __name__ == "__main__":
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory, Parallel, delayed
     from sklearn.base import clone
+    import nibabel
+
     mem = Memory(cachedir="/storage/workspace/rphlypo/retreat/dump/")
     print "Loading all paths and variables into memory"
     df = get_all_paths()
+    target_affine_ = nibabel.load(df["func"][0]).get_affine()
     print "preparing and running MultiNiftiMasker"
     mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=10,
-                           verbose=10)
+                           verbose=10, target_affine=target_affine_)
     mask_img = mnm.fit(list(df["func"]))
     print "preparing and running NiftiMapsMasker"
     nmm = NiftiMapsMasker(
