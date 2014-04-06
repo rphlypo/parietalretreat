@@ -127,5 +127,6 @@ if __name__ == "__main__":
                               "HarvardOxford-cortl-prob-2mm.nii.gz"),
         mask_img=mask_img, detrend=True, smoothing_fwhm=5, standardize=True,
         low_pass=None, high_pass=None, memory=mem, verbose=10)
-    region_ts = Parallel(n_jobs=25)(clone(nmm).fit_transform(niimg, n_hv_confounds=5)
+    region_ts = Parallel(n_jobs=25)(delayed(clone(nmm).fit_transform)
+                                        (niimg, n_hv_confounds=5)
                                     for niimg in list(df["func"]))
