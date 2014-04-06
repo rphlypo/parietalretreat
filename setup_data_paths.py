@@ -125,7 +125,7 @@ if __name__ == "__main__":
     nmm = NiftiMapsMasker(
         maps_img=os.path.join("/usr/share/fsl/data/atlases/HarvardOxford/",
                               "HarvardOxford-cortl-prob-2mm.nii.gz"),
-        mask_img=mask_img, detrend=True, fwhm=5, standardize=True,
+        mask_img=mask_img, detrend=True, smoothing_fwhm=5, standardize=True,
         low_pass=None, high_pass=None, memory=mem, verbose=10)
     fit_transform = mem.cache(clone(nmm).fit_transform)
     region_ts = Parallel(n_jobs=10)(delayed(fit_transform)(niimg,
