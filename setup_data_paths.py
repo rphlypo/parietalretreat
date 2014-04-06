@@ -115,19 +115,20 @@ if __name__ == "__main__":
     print "Loading all paths and variables into memory"
     df = get_all_paths()
     target_affine_ = nibabel.load(df["func"][0]).get_affine()
-    target_shape_ = nibabel.load(df["func"][0]).shape
+    target_shape_ = nibabel.load(df["func"][0]).shape[:-1]
     print "preparing and running MultiNiftiMasker"
     mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=10,
                            verbose=10, target_affine=target_affine_,
                            target_shape=target_shape_)
-    mask_img = mnm.fit(list(df["func"]))
+    mask_img = mnm.fit(list(df["func"])).mask_img_
     print "preparing and running NiftiMapsMasker"
     nmm = NiftiMapsMasker(
         maps_img=os.path.join("/usr/share/fsl/data/atlases/HarvardOxford/",
                               "HarvardOxford-cortl-prob-2mm.nii.gz"),
-        mask_img=mask_img, detrend=True, fwhm=5, standardize=True,
+        mask_img=mask_img, detrend=True, smoothing_fwhm=5, standardize=True,
         low_pass=None, high_pass=None, memory=mem, verbose=10)
-    fit_transform = mem.cache(clone(nmm).fit_transform)
-    region_ts = Parallel(n_jobs=10)(delayed(fit_transform)(niimg,
-                                                           n_hv_confounds=5)
-                                    for niimg in list(df["func"]))
+    region_ts = [clone(nmm).fit_transform(niimg, n_hv_confounds=5)
+                 for niimg in list(df["func"])]
+    joblib.dump(region_ts, "/storage/workspace/rphlypo/retreat/results/")
+    region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
+    df.join(region_signals)
