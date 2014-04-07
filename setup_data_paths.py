@@ -41,14 +41,15 @@ def get_all_paths(data_set=None, root_dir="/"):
             model = tail[8 + counter][-3:]
             task, run = tail[10 + counter].split("_")
 
-            tmp_base = os.path.split(os.path.split(fun_path)[0])[0]
+            tmp_base = os.path.split(os.path.split(os.path.split(
+                fun_path)[0])[0])[0]
 
             anat = os.path.join(tmp_base,
                                 "anatomy",
                                 "highres{}.nii.gz".format(model[-3:]))
 
             onsets = glob.glob(os.path.join(tmp_base, "onsets",
-                                            "task{}_run{}".format(task, run),
+                                            "{}_{}".format(task, run),
                                             "cond*.txt"))
 
             confds = os.path.join(os.path.split(fun_path)[0], "motion.txt")
