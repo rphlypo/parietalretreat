@@ -5,18 +5,23 @@ import pandas
 
 
 def get_all_paths(data_set=None, root_dir="/"):
+    # TODO
+    # if data_set ... collections.Sequence
+    # iterate over list
+    if data_set is None:
+        data_set = {"hcp", "henson2010faces", "ds105", "ds107"}
     list_ = list()
     head, tail_ = os.path.split(root_dir)
     counter = 0
     while tail_:
         head, tail_ = os.path.split(head)
         counter += 1
-    if data_set is None:
+
+    if hasattr(data_set, "__iter__"):
         df_ = list()
-        data_sets = {"hcp", "henson2010faces", "ds105", "ds107"}
-        for ds in data_sets:
+        for ds in data_set:
             df_.append(get_all_paths(data_set=ds, root_dir=root_dir))
-        df = pandas.concat(df_, keys=data_sets)
+        df = pandas.concat(df_, keys=data_set)
     elif data_set.startswith("ds") or data_set == "henson2010faces":
         base_path = os.path.join(root_dir,
                                  "storage/workspace/brainpedia/preproc/",
@@ -108,16 +113,22 @@ def get_all_paths(data_set=None, root_dir="/"):
 if __name__ == "__main__":
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory, Parallel, delayed
+    import joblib
     from sklearn.base import clone
     import nibabel
 
-    mem = Memory(cachedir="/storage/workspace/rphlypo/retreat/dump/")
+    root_dir = "/home"
+
+    print os.path.join(root_dir, "storage/workspace/rphlypo/retreat/dump/")
+    mem = Memory(cachedir=os.path.join(root_dir,
+                                       "storage/workspace/rphlypo/retreat/dump/"))
     print "Loading all paths and variables into memory"
-    df = get_all_paths()
+    df = get_all_paths(root_dir=root_dir,
+                       data_set=["ds105", "ds107", "henson2010faces"])
     target_affine_ = nibabel.load(df["func"][0]).get_affine()
     target_shape_ = nibabel.load(df["func"][0]).shape[:-1]
     print "preparing and running MultiNiftiMasker"
-    mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=10,
+    mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=1,
                            verbose=10, target_affine=target_affine_,
                            target_shape=target_shape_)
     mask_img = mnm.fit(list(df["func"])).mask_img_
@@ -129,6 +140,6 @@ if __name__ == "__main__":
         low_pass=None, high_pass=None, memory=mem, verbose=10)
     region_ts = [clone(nmm).fit_transform(niimg, n_hv_confounds=5)
                  for niimg in list(df["func"])]
-    joblib.dump(region_ts, "/storage/workspace/rphlypo/retreat/results/")
+    joblib.dump(region_ts, "/home/storage/workspace/rphlypo/retreat/results/")
     region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
     df.join(region_signals)
