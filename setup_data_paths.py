@@ -111,7 +111,7 @@ def get_all_paths(data_set=None, root_dir="/"):
 
 def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
-    from joblib import Memory, Parallel, delayed
+    from joblib import Memory
     import joblib
     from sklearn.base import clone
     import nibabel
