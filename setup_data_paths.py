@@ -109,6 +109,7 @@ def get_all_paths(data_set=None, root_dir="/"):
         df = DataFrame(list_)
     return df
 
+
 def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory
@@ -138,6 +139,9 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
                 os.path.join(dump_dir, "results/"))
     region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
     df.join(region_signals)
+    return df
+
 
 if __name__ == "__main__":
-    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/")
+    run(root_dir="/home", data_set=["ds107", "henson2010faces"],
+        dump_dir="storage/workspace/parietal_retreat/covariance_learn/")
