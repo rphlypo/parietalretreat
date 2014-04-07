@@ -135,7 +135,7 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     region_ts = [clone(nmm).fit_transform(niimg, n_hv_confounds=5)
                  for niimg in list(df["func"])]
     joblib.dump(region_ts,
-                os.path.join(dumpdir, "results/"))
+                os.path.join(dump_dir, "results/"))
     region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
     df.join(region_signals)
 
