@@ -140,4 +140,4 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     df.join(region_signals)
 
 if __name__ == "__main__":
-    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/)
+    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/")
