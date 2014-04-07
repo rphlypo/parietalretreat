@@ -1,3 +1,10 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Apr  6 11:31:59 2014
+
+@author: sb238920
+"""
+
 import glob
 import os.path
 from pandas import DataFrame
@@ -5,23 +12,18 @@ import pandas
 
 
 def get_all_paths(data_set=None, root_dir="/"):
-    # TODO
-    # if data_set ... collections.Sequence
-    # iterate over list
-    if data_set is None:
-        data_set = {"hcp", "henson2010faces", "ds105", "ds107"}
     list_ = list()
     head, tail_ = os.path.split(root_dir)
     counter = 0
     while tail_:
         head, tail_ = os.path.split(head)
         counter += 1
-
-    if hasattr(data_set, "__iter__"):
+    if data_set is None:
         df_ = list()
-        for ds in data_set:
+        data_sets = {"hcp", "henson2010faces", "ds105", "ds107"}
+        for ds in data_sets:
             df_.append(get_all_paths(data_set=ds, root_dir=root_dir))
-        df = pandas.concat(df_, keys=data_set)
+        df = pandas.concat(df_, keys=data_sets)
     elif data_set.startswith("ds") or data_set == "henson2010faces":
         base_path = os.path.join(root_dir,
                                  "storage/workspace/brainpedia/preproc/",
@@ -109,36 +111,33 @@ def get_all_paths(data_set=None, root_dir="/"):
         df = DataFrame(list_)
     return df
 
-def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
+
+if __name__ == "__main__":
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory, Parallel, delayed
-    import joblib
     from sklearn.base import clone
     import nibabel
 
-    mem = Memory(cachedir=os.path.join(root_dir, dump_dir))
+    mem = Memory(cachedir=("/media/Elements/volatile/new/salma/storage/workspace"
+                           "/brainpedia/preproc/henson2010faces/dump/"))
     print "Loading all paths and variables into memory"
-    df = get_all_paths(root_dir=root_dir, data_set=data_set)
+    df = get_all_paths(data_set="henson2010faces", 
+                       root_dir="/media/Elements/volatile/new/salma")
     target_affine_ = nibabel.load(df["func"][0]).get_affine()
     target_shape_ = nibabel.load(df["func"][0]).shape[:-1]
+    print(target_shape_) 
     print "preparing and running MultiNiftiMasker"
-    mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=n_jobs,
+    mnm = MultiNiftiMasker(memory=mem, n_jobs=1,
                            verbose=10, target_affine=target_affine_,
-                           target_shape=target_shape_)
-    mask_img = mnm.fit(list(df["func"])).mask_img_
+                           target_shape=target_shape_, mask_strategy="epi")                                                       
+    mask_img = mnm.fit(list(df["func"]))
     print "preparing and running NiftiMapsMasker"
     nmm = NiftiMapsMasker(
         maps_img=os.path.join("/usr/share/fsl/data/atlases/HarvardOxford/",
                               "HarvardOxford-cortl-prob-2mm.nii.gz"),
         mask_img=mask_img, detrend=True, smoothing_fwhm=5, standardize=True,
         low_pass=None, high_pass=None, memory=mem, verbose=10)
-    region_ts = [clone(nmm).fit_transform(niimg, n_hv_confounds=5)
-                 for niimg in list(df["func"])]
-    joblib.dump(region_ts,
-                os.path.join(dump_dir, "results/"))
-    region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
-    df.join(region_signals)
-
-if __name__ == "__main__":
-    run(root_dir="/home", data_set=["ds107", "henson2010faces"], 
-        dump_dir="workspace/parietal_retreat/covariance_learn/")
+    fit_transform = mem.cache(clone(nmm).fit_transform)
+    region_ts = Parallel(n_jobs=1)(delayed(fit_transform)(niimg)#,
+                                                           #n_hv_confounds=5)
+                                    for niimg in list(df["func"]))
