@@ -109,22 +109,16 @@ def get_all_paths(data_set=None, root_dir="/"):
         df = DataFrame(list_)
     return df
 
-
-if __name__ == "__main__":
+def run(root_dir="/", dump_dir="/tmp", data_set=None):
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory, Parallel, delayed
     import joblib
     from sklearn.base import clone
     import nibabel
 
-    root_dir = "/home"
-
-    print os.path.join(root_dir, "storage/workspace/rphlypo/retreat/dump/")
-    mem = Memory(cachedir=os.path.join(root_dir,
-                                       "storage/workspace/rphlypo/retreat/dump/"))
+    mem = Memory(cachedir=os.path.join(root_dir, dump_dir))
     print "Loading all paths and variables into memory"
-    df = get_all_paths(root_dir=root_dir,
-                       data_set=["ds105", "ds107", "henson2010faces"])
+    df = get_all_paths(root_dir=root_dir, data_set=data_set)
     target_affine_ = nibabel.load(df["func"][0]).get_affine()
     target_shape_ = nibabel.load(df["func"][0]).shape[:-1]
     print "preparing and running MultiNiftiMasker"
@@ -140,6 +134,10 @@ if __name__ == "__main__":
         low_pass=None, high_pass=None, memory=mem, verbose=10)
     region_ts = [clone(nmm).fit_transform(niimg, n_hv_confounds=5)
                  for niimg in list(df["func"])]
-    joblib.dump(region_ts, "/home/storage/workspace/rphlypo/retreat/results/")
+    joblib.dump(region_ts,
+                os.path.join(dumpdir, "results/"))
     region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
     df.join(region_signals)
+
+if __name__ == "__main__":
+    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/")
