@@ -109,7 +109,7 @@ def get_all_paths(data_set=None, root_dir="/"):
         df = DataFrame(list_)
     return df
 
-def run(root_dir="/", dump_dir="/tmp", data_set=None):
+def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory, Parallel, delayed
     import joblib
@@ -122,7 +122,7 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None):
     target_affine_ = nibabel.load(df["func"][0]).get_affine()
     target_shape_ = nibabel.load(df["func"][0]).shape[:-1]
     print "preparing and running MultiNiftiMasker"
-    mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=1,
+    mnm = MultiNiftiMasker(mask_strategy="epi", memory=mem, n_jobs=n_jobs,
                            verbose=10, target_affine=target_affine_,
                            target_shape=target_shape_)
     mask_img = mnm.fit(list(df["func"])).mask_img_
@@ -140,4 +140,4 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None):
     df.join(region_signals)
 
 if __name__ == "__main__":
-    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/")
+    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/)
