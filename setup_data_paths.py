@@ -11,7 +11,7 @@ def get_all_paths(data_set=None, root_dir="/"):
     # iterate over list
     if data_set is None:
         data_set = {"hcp", "henson2010faces", "ds105", "ds107"}
-    head, tail_ = os.path.split(root_dir)
+    head, tail_ = os.path.split(os.path.normpath(root_dir))
     counter = 0
     while tail_:
         head, tail_ = os.path.split(head)
