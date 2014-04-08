@@ -2,6 +2,7 @@ import glob
 import os.path
 from pandas import DataFrame
 import pandas
+import copy
 
 
 def get_all_paths(data_set=None, root_dir="/"):
@@ -10,7 +11,6 @@ def get_all_paths(data_set=None, root_dir="/"):
     # iterate over list
     if data_set is None:
         data_set = {"hcp", "henson2010faces", "ds105", "ds107"}
-    list_ = list()
     head, tail_ = os.path.split(root_dir)
     counter = 0
     while tail_:
@@ -23,11 +23,29 @@ def get_all_paths(data_set=None, root_dir="/"):
             df_.append(get_all_paths(data_set=ds, root_dir=root_dir))
         df = pandas.concat(df_, keys=data_set)
     elif data_set.startswith("ds") or data_set == "henson2010faces":
+        list_ = list()
         base_path = os.path.join(root_dir,
                                  "storage/workspace/brainpedia/preproc/",
                                  data_set)
+
+        with open(os.path.join(base_path, "models",
+                               "model001",
+                               "condition_key.txt")) as f:
+            conditions = list()
+            while True:
+                try:
+                    line = f.readline()
+                    if not line:
+                        raise StopIteration
+                    if len(line.split()) > 3:
+                        conditions.append(" ".join(line.split()[2:]))
+                    else:
+                        conditions.append(line.split()[2])
+                except StopIteration:
+                    break
         with open(os.path.join(base_path, "scan_key.txt")) as file_:
             TR = file_.readline()[3:-1]
+        cnt = 0
         for fun_path in glob.iglob(os.path.join(base_path,
                                                 "sub*/model/model*/"
                                                 "BOLD/task*/bold.nii.gz")):
@@ -53,17 +71,25 @@ def get_all_paths(data_set=None, root_dir="/"):
                                             "cond*.txt"))
 
             confds = os.path.join(os.path.split(fun_path)[0], "motion.txt")
-            list_.append({"subj_id": subj_id,
-                          "model": model,
-                          "task": task[-3:],
-                          "run": run[-3:],
-                          "func": fun_path,
-                          "anat": anat,
-                          "confds": confds,
-                          "TR": TR})
+            tmp_dict = ({"subj_id": subj_id,
+                         "model": model,
+                         "task": task[-3:],
+                         "run": run[-3:],
+                         "func": fun_path,
+                         "anat": anat,
+                         "confds": confds,
+                         "TR": TR,
+                         "region_ix": cnt})
             if onsets:
-                list_[-1]["onsets"] = onsets
-
+                for onset in onsets:
+                    tmp_dict_ = tmp_dict
+                    tmp_dict_["cond_onsets"] = onset
+                    ix = int(onset[-7:-4]) - 1
+                    tmp_dict_["condition"] = conditions[ix]
+                    list_.append(copy.copy(tmp_dict_))
+            else:
+                list_.append(copy.copy(tmp_dict))
+            cnt += 1
         df = DataFrame(list_)
     elif data_set == "hcp":
         base_path = os.path.join(root_dir, "storage/data/HCP/Q2/")
