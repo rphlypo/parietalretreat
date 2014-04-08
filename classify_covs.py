@@ -42,7 +42,6 @@ def get_region_signals(df, region_signals, data_set="ds107"):
     df_ = df.groupby(["condition", "subj_id"])
     df_list = list()
     for names, group in df_:
-        print names
         data = list()
         for ix_ in range(len(group)):
             onset_file, TR, region_ix =\
@@ -55,8 +54,6 @@ def get_region_signals(df, region_signals, data_set="ds107"):
                         "subj_id": names[1],
                         "region_signals": arr})
     return DataFrame(df_list)
-    #conditions = get_conditions(data_set)
-    #region_condition_data = [region_signals[]]
 
 
 def get_samples(signals, onset_file, TR):
@@ -90,7 +87,8 @@ if __name__ == "__main__":
     df2 = get_region_signals(df, region_signals)
     groups = df2.groupby("condition")
     for condition, group in groups:
-        print condition
+        print "condition = {}".format(condition)
         for ix_ in range(len(group)):
-            print "\t{}, {}".format(group.iloc[ix_]["subj_id"],
-                                    group.iloc[ix_]["regions_signals"].shape)
+            print "\tsubj_id = {}, shape = {}".format(
+                group.iloc[ix_]["subj_id"],
+                group.iloc[ix_]["region_signals"].shape)
