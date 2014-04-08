@@ -5,6 +5,8 @@ import numpy as np
 import joblib
 import os.path
 from pandas import DataFrame
+import confound
+import scipy.linalg
 
 
 def load_data(root_dir="/",
@@ -44,11 +46,12 @@ def get_region_signals(df, region_signals, data_set="ds107"):
     for names, group in df_:
         data = list()
         for ix_ in range(len(group)):
-            onset_file, TR, region_ix =\
+            onset_file, TR, region_ix, confd_file =\
                 [group.iloc[ix_][k]
-                 for k in ["cond_onsets", "TR", "region_ix"]]
-            data.append(get_samples(region_signals[ix_],
-                                    onset_file, TR))
+                 for k in ["cond_onsets", "TR", "region_ix", "confds"]]
+            confds = confound.compute_mvt_confounds(confd_file)[0]
+            signals = _regress(region_signals[ix_], confds)
+            data.append(get_samples(signals, onset_file, TR))
         arr = np.vstack(data)
         df_list.append({"condition": names[0],
                         "subj_id": names[1],
@@ -56,7 +59,7 @@ def get_region_signals(df, region_signals, data_set="ds107"):
     return DataFrame(df_list)
 
 
-def get_samples(signals, onset_file, TR):
+def get_samples(signals, onset_file, TR, confds):
     onsets = np.loadtxt(onset_file)
     onsets_ = onsets[..., 0]
     X1 = np.hstack((onsets_[:-1][np.diff(onsets_) > TR], onsets_[-1]))
@@ -78,6 +81,22 @@ def get_samples(signals, onset_file, TR):
                     for t in z])
 
     return signals[ix_, ...] - np.mean(signals[ix_, ...], axis=0)
+
+
+def get_symm_psd_mx(df, CovEst):
+    covs = list()
+    for ix_ in range(len(df)):
+        time_series = df.iloc[ix_]["region_signals"]
+        cov_est = CovEst(assume_centered=True)
+        covs.append(cov_est.fit(time_series).covariance_)
+    df["covs"] = covs
+    return df
+
+
+def _regress(X, y):
+    print X.shape, y.shape
+    Q, _ = scipy.linalg.qr(y, mode="economic")
+    return X - y.dot(np.linalg.pinv(y.T.dot(y))).dot(y.T.dot(X))
 
 
 if __name__ == "__main__":
