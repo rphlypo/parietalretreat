@@ -11,7 +11,6 @@ import matlab_utilities as mat
 from scipy import linalg
 from math import log
 
-from matrix import untri
 from covariance import CovEmbedding
 
 
@@ -151,9 +150,9 @@ class FC(object):
         return self
         
     def compute_prec(self):            
-        ce = CovEmbedding('precisions')
-        self.prec = ce.fit_transform(self.cov)
-        if False:
+#        ce = CovEmbedding('partial correlation') # change KIND to precision
+#        self.prec = ce.fit_transform(self.cov)
+        if True:
             cond_number = np.linalg.cond(self.cov) 
             if cond_number > 100:#1/sys.float_info.epsilon:
                 print('Bad conditioning! condition number is {}'.format(cond_number))
@@ -166,13 +165,17 @@ class FC(object):
         return self
         
     def compute_seg(self):
-       integ = prec_to_integ(self.prec,np.array(self.ntwk_dims)) # integration matrices     
-       self.seg = integ_to_seg(integ)  # segregation matrices 
+       if self.ntwk_dims is None:
+           self.seg = None
+       else:
+           integ = prec_to_integ(self.prec,np.array(self.ntwk_dims)) # integration matrices     
+           self.seg = integ_to_seg(integ)  # segregation matrices 
        return self
 
     def compute_tangent(self):
         ce = CovEmbedding()
-        self.tangent = ce.fit_transform(self.cov)
+        ce.fit([self.cov])
+        self.tangent = ce.transform([self.cov])[0]
         return self
 
     def compute(self,*args):
@@ -192,9 +195,9 @@ class FC(object):
                    4:self.compute_seg(), 5:self.compute_tangent()}
         measures_steps = {'correlations':[0,1], 'partial correlations':[0,2,3],
                           'segregations':[0,2,4],'covariances':[0],
-                          'precisions':[0,2], 'tangent space':[0,5]}        
+                          'precisions':[0,2], 'tangent plane':[0,5]}        
         steps = [step for name in args for step in measures_steps[name]]  
-        steps = set(steps)         
+        steps = set(steps)
         for n_step in steps:
             computs[n_step]
         output = {'correlations':self.corr,
@@ -202,7 +205,7 @@ class FC(object):
                   'segregations':self.seg,
                   'covariances':self.cov,
                   'precisions':self.prec,
-                  'tangent space':self.tangent} 
+                  'tangent plane':self.tangent} 
         self.conn = {}       
         for measure_name in args:
             self.conn[measure_name] = output[measure_name]

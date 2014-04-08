@@ -10,6 +10,7 @@ import numpy as np
 
 from first_level import FC 
 from second_level_new import Comparison, corr_to_Z
+from classify_covs import load_data, get_region_signals
 
 def analysis(region_signals, standardize = False, *args):
     """ Computes for given signals the connectivity matrices measured with 
@@ -36,13 +37,12 @@ def analysis(region_signals, standardize = False, *args):
         
     n_subjects = len(region_signals)
     print('{} subjects'.format(n_subjects))
-    measure_names = args
     fc_ = {}
-    for subject, n_subject in enumerate(region_signals):
+    for n_subject, subject in enumerate(region_signals):
         ntwk_dims = None                
         if n_subject == 0:         
             fcs = []
-
+            
         myFC = FC(subject, standardize, ntwk_dims)            
         myFC.compute(*args)
         for n_measure, measure_name in enumerate(args):
@@ -90,13 +90,26 @@ def results(all_cond_names, tests,corrected=False): # todo: add masking option
     return results_
         
 if __name__ == "__main__":
-    if False:
-        fcs = {}
-        for cond_name, region_signals in zip(cond_names, all_conds_signals):
-            fc = analysis(region_signals, standardize = False, "covariances", 
-                          "precisions", "tangent plane")
-            for measure_name, measure_values in fc.iteritems:                    
-                fcs[(cond_name, measure_name)] = measure_values            
+    df, region_signals = load_data(root_dir="/media/Elements/volatile/new/salma",
+                           data_set="ds107")
+    df2 = get_region_signals(df, region_signals)
+    groups = df2.groupby("condition")
+    cond_names = []
+    all_cond_signals = []
+    for condition, group in groups:
+        cond_names.append(condition)
+        the_cond_signals=[]
+        for ix_ in range(len(group)):
+            the_cond_signals.append(group.iloc[ix_]["region_signals"])
+        all_cond_signals.append(the_cond_signals)
+        
+    fcs = {}
+    for cond_name, region_signals in zip(cond_names, all_cond_signals):
+        print(cond_name)
+        fc = analysis(region_signals, True, "covariances",
+                      "precisions", "tangent plane")
+        for measure_name, measure_values in fc.iteritems():                    
+            fcs[(cond_name, measure_name)] = measure_values            
     if False:
         group_all = np.ones((1,n_subjects))
         group = {'All': group_all}

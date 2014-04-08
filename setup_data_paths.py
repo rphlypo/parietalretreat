@@ -27,7 +27,7 @@ def get_all_paths(data_set=None, root_dir="/"):
         base_path = os.path.join(root_dir,
                                  "storage/workspace/brainpedia/preproc/",
                                  data_set)
-
+        print(os.path.exists(base_path))
         with open(os.path.join(base_path, "models",
                                "model001",
                                "condition_key.txt")) as f:

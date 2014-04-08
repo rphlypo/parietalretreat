@@ -173,7 +173,8 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
                         for c in covs]
         elif self.kind == 'partial correlation':
             covs = [inv(g) for g in covs]
-        return np.array([sym_to_vec(c) for c in covs])
+            
+        return covs #np.array([sym_to_vec(c) for c in covs])
 
 
 if __name__ == '__main__':

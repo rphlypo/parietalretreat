@@ -81,7 +81,7 @@ def get_samples(signals, onset_file, TR):
 
 
 if __name__ == "__main__":
-    df, region_signals = load_data(root_dir="/home",
+    df, region_signals = load_data(root_dir="/media/Elements/volatile/new/salma",
                                    data_set="ds107")
 
     df2 = get_region_signals(df, region_signals)
