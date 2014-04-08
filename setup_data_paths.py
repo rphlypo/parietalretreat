@@ -41,16 +41,18 @@ def get_all_paths(data_set=None, root_dir="/"):
             model = tail[8 + counter][-3:]
             task, run = tail[10 + counter].split("_")
 
-            tmp_base = os.path.split(os.path.split(fun_path)[0])[0]
+            tmp_base = os.path.split(os.path.split(os.path.split(fun_path)[0])[0])[0]
 
             anat = os.path.join(tmp_base,
                                 "anatomy",
                                 "highres{}.nii.gz".format(model[-3:]))
-
             onsets = glob.glob(os.path.join(tmp_base, "onsets",
                                             "task{}_run{}".format(task, run),
                                             "cond*.txt"))
-
+            print(os.path.join(tmp_base, "onsets",
+                                            "task{}_run{}".format(task, run),
+                                            "cond*.txt"))
+            pass
             confds = os.path.join(os.path.split(fun_path)[0], "motion.txt")
             list_.append({"subj_id": subj_id,
                           "model": model,
@@ -140,4 +142,5 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     df.join(region_signals)
 
 if __name__ == "__main__":
-    run(root_dir="/home", data_set=["ds107", "henson2010faces"], dump_dir="workspace/parietal_retreat/covariance_learn/")
+    run(root_dir="/media/Elements/volatile/new/salma", 
+        data_set=["henson2010faces"], dump_dir="storage/workspace/parietal_retreat/covariance_learn/")
