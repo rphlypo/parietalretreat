@@ -46,9 +46,9 @@ def get_all_paths(data_set=None, root_dir="/"):
         with open(os.path.join(base_path, "scan_key.txt")) as file_:
             TR = file_.readline()[3:-1]
         cnt = 0
-        for fun_path in glob.iglob(os.path.join(base_path,
+        for fun_path in sorted(glob.glob(os.path.join(base_path,
                                                 "sub*/model/model*/"
-                                                "BOLD/task*/bold.nii.gz")):
+                                                "BOLD/task*/bold.nii.gz"))):
             head, tail_ = os.path.split(fun_path)
             tail = [tail_]
             while tail_:
