@@ -74,7 +74,6 @@ def get_samples(signals, onset_file, TR):
     y = y[np.argsort(X, kind="mergesort")]
     X = np.sort(X, kind="mergesort") + 5.
 
-
     z = np.arange(0, signals.shape[0] * np.float(TR), np.float(TR))
 
     ix_ = np.array([True
@@ -83,9 +82,15 @@ def get_samples(signals, onset_file, TR):
 
     return signals[ix_, ...] - np.mean(signals[ix_, ...], axis=0)
 
-#
-#        #plt.step(X, y)
-#    #plt.ylim((-.1, 4.1))
-#    #plt.show()
-#    # df[region_signals] contain the region signals
-#    # df[onsets] contain the different onsets
+
+if __name__ == "__main__":
+    df, region_signals = load_data(root_dir="/home",
+                                   data_set="ds107")
+
+    df2 = get_region_signals(df, region_signals)
+    groups = df2.groupby("condition")
+    for condition, group in groups:
+        print condition
+        for ix_ in range(len(group)):
+            print "\t{}, {}".format(group.iloc[ix_]["subj_id"],
+                                    group.iloc[ix_]["regions_signals"].shape)
