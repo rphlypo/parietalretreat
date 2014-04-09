@@ -27,7 +27,6 @@ def get_all_paths(data_set=None, root_dir="/"):
         base_path = os.path.join(root_dir,
                                  "storage/workspace/brainpedia/preproc/",
                                  data_set)
-        print(os.path.exists(base_path))
         with open(os.path.join(base_path, "models",
                                "model001",
                                "condition_key.txt")) as f:
@@ -46,9 +45,9 @@ def get_all_paths(data_set=None, root_dir="/"):
         with open(os.path.join(base_path, "scan_key.txt")) as file_:
             TR = file_.readline()[3:-1]
         cnt = 0
-        for fun_path in sorted(glob.glob(os.path.join(base_path,
-                                                "sub*/model/model*/"
-                                                "BOLD/task*/bold.nii.gz"))):
+        for fun_path in sorted(glob.glob(
+            os.path.join(base_path,
+                         "sub*/model/model*/BOLD/task*/bold.nii.gz"))):
             head, tail_ = os.path.split(fun_path)
             tail = [tail_]
             while tail_:
@@ -87,9 +86,10 @@ def get_all_paths(data_set=None, root_dir="/"):
                     ix = int(onset[-7:-4]) - 1
                     tmp_dict_["condition"] = conditions[ix]
                     list_.append(copy.copy(tmp_dict_))
+                cnt += len(onsets)
             else:
                 list_.append(copy.copy(tmp_dict))
-            cnt += 1
+                cnt += 1
         df = DataFrame(list_)
     elif data_set == "hcp":
         base_path = os.path.join(root_dir, "storage/data/HCP/Q2/")

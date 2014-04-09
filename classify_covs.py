@@ -7,21 +7,33 @@ import os.path
 from pandas import DataFrame
 import confound
 import scipy.linalg
+import scipy.stats.mstats
+from covariance import CovEmbedding
+from sklearn.covariance import EmpiricalCovariance, LedoitWolf
 
 
-def load_data(root_dir="/",
-              data_set="ds107",
-              dump_file="storage/workspace/parietal_retreat/" +
-                       "covariance_learn/dump/results.pkl"):
+def get_data(root_dir="/",
+             data_set="ds107",
+             dump_file="storage/workspace/parietal_retreat/" +
+             "covariance_learn/dump/results.pkl"):
+    df, region_signals = _load_data(root_dir=root_dir,
+                                    data_set=data_set,
+                                    dump_file=dump_file)
+    return _get_region_signals(df, region_signals, data_set=data_set)
+
+
+def _load_data(root_dir="/",
+               data_set="ds107",
+               dump_file="storage/workspace/parietal_retreat/" +
+               "covariance_learn/dump/results.pkl"):
     df = setup_data_paths.get_all_paths(root_dir=root_dir, data_set="ds107")
-    region_signals = joblib.load(os.path.join(root_dir,
-                                              dump_file))
+    region_signals = joblib.load(os.path.join(root_dir, dump_file))
     return df, region_signals
 
 
-def get_conditions(root_dir, data_set):
+def _get_conditions(root_dir, data_set="ds107"):
     data_set_dir = os.path.join(root_dir,
-                                "/storage/workspace/brainpedia/preproc",
+                                "storage/workspace/brainpedia/preproc",
                                 data_set,
                                 "models/model001/condition_key.txt")
 
@@ -40,7 +52,7 @@ def get_conditions(root_dir, data_set):
                 return conditions
 
 
-def get_region_signals(df, region_signals, data_set="ds107"):
+def _get_region_signals(df, region_signals, data_set="ds107"):
     df_ = df.groupby(["condition", "subj_id"])
     df_list = list()
     for names, group in df_:
@@ -50,8 +62,8 @@ def get_region_signals(df, region_signals, data_set="ds107"):
                 [group.iloc[ix_][k]
                  for k in ["cond_onsets", "TR", "region_ix", "confds"]]
             confds = confound.compute_mvt_confounds(confd_file)[0]
-            signals = _regress(region_signals[ix_], confds)
-            data.append(get_samples(signals, onset_file, TR))
+            signals = _regress(region_signals[region_ix], confds)
+            data.append(_get_samples(signals, onset_file, TR))
         arr = np.vstack(data)
         df_list.append({"condition": names[0],
                         "subj_id": names[1],
@@ -59,7 +71,7 @@ def get_region_signals(df, region_signals, data_set="ds107"):
     return DataFrame(df_list)
 
 
-def get_samples(signals, onset_file, TR, confds):
+def _get_samples(signals, onset_file, TR):
     onsets = np.loadtxt(onset_file)
     onsets_ = onsets[..., 0]
     X1 = np.hstack((onsets_[:-1][np.diff(onsets_) > TR], onsets_[-1]))
@@ -83,7 +95,7 @@ def get_samples(signals, onset_file, TR, confds):
     return signals[ix_, ...] - np.mean(signals[ix_, ...], axis=0)
 
 
-def get_symm_psd_mx(df, CovEst):
+def _get_symm_psd_mx(df, CovEst):
     covs = list()
     for ix_ in range(len(df)):
         time_series = df.iloc[ix_]["region_signals"]
@@ -94,20 +106,40 @@ def get_symm_psd_mx(df, CovEst):
 
 
 def _regress(X, y):
-    print X.shape, y.shape
     Q, _ = scipy.linalg.qr(y, mode="economic")
-    return X - y.dot(np.linalg.pinv(y.T.dot(y))).dot(y.T.dot(X))
+    return X - Q.dot(np.linalg.pinv(Q.T.dot(Q))).dot(Q.T.dot(X))
 
+
+def statistical_test(estimators={'kind': 'tangent',
+                                 'base_estimator': None},
+                     root_dir="/"):
+    df = get_data(root_dir=root_dir)
+    grouped = df.groupby(["condition", "subj_id"])
+    conditions = _get_conditions(root_dir=root_dir)
+    dict_list = list()
+    entries = ("comparison", "tstat", "pval")
+    for (ix1_, condition1) in enumerate(conditions):
+        for (ix2_, condition2) in enumerate(conditions):
+            if ix1_ <= ix2_:
+                continue
+            cond = list()
+            grouped = df.groupby("subj_id")
+            for _, group in grouped:
+                cond.append(group[group["condition"] == condition1]
+                            ["region_signals"].iloc[0])
+                cond.append(group[group["condition"] == condition2]
+                            ["region_signals"].iloc[0])
+            X = CovEmbedding(**estimators).fit_transform(cond)
+            t_stat, p = scipy.stats.mstats.ttest_rel(X[::2, ...],
+                                                     X[1::2, ...],
+                                                     axis=0)
+            print "{} vs. {}: t_stat = {}, p-val = {}".format(
+                condition1, condition2, t_stat, p)
+            dict_list.append(
+                dict(zip(*[entries,
+                           ("{} vs. {}".format(condition1, condition2),
+                            t_stat, p)])))
+    return DataFrame(dict_list, columns=entries)
 
 if __name__ == "__main__":
-    df, region_signals = load_data(root_dir="/media/Elements/volatile/new/salma",
-                                   data_set="ds107")
-
-    df2 = get_region_signals(df, region_signals)
-    groups = df2.groupby("condition")
-    for condition, group in groups:
-        print "condition = {}".format(condition)
-        for ix_ in range(len(group)):
-            print "\tsubj_id = {}, shape = {}".format(
-                group.iloc[ix_]["subj_id"],
-                group.iloc[ix_]["region_signals"].shape)
+    t_test = statistical_test(root_dir="/home")
