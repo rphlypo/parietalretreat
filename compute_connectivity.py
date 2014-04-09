@@ -12,6 +12,9 @@ from scipy import linalg
 
 from classify_covs import load_data, get_region_signals
 from covariance import CovEmbedding
+from sklearn.base import BaseEstimator
+
+import covariance
 
 
 def cov_to_corr(cov):
@@ -58,7 +61,7 @@ def prec_to_partial_corr(prec):
     return partial_corr
 
 
-class FC(object):
+class FC(BaseEstimator, TransformerMixin):
     """Functional connectivity class
 
     Attributes
@@ -68,17 +71,26 @@ class FC(object):
     `standardize`: bool, default to False
         standardize time series
     """
-    def __init__(self, signals, standardize=False):
-        self.signals = signals
+    def __init__(self, standardize=False, estimator=None):
         self.standardize = standardize
+        self.base_estimator = base_estimator
 
-    def set_params(self, **kwargs):
-        for param, val in kwargs.items():
-            self.setattr(param, val)
 
-    def get_params(self, deep=True):
-        return {"signals":      self.signals,
-                "standardize":  self.standardize}
+    def fit(self, X):
+        X = X - X.mean(axis=0)
+        self.emp_cov_ = EmpiricalCovariance(X, assume_centered=True)
+
+
+    def transform(self, X, y):
+        if estimator is None:
+            estimator = "tangent"
+        if estimator == "tangent":
+        elif estimator == "covariance":
+        elif estimator == "precision":
+        elif estimator == "correlation":
+        elif estimator == "partialcorr":
+
+
 
     def compute_cov(self):
         """Compute empirical covariances
@@ -113,7 +125,7 @@ class FC(object):
         prec_: array
             precision matrix, shape (n_features, n_features)
         """
-        cond_number = np.linalg.cond(self.cov)
+        cond_number = np.linalg.cond(self.cov_)
         if cond_number > 100:  # 1/sys.float_info.epsilon:
             print('Bad conditioning! ' +
                   'condition number is {}'.format(cond_number))
@@ -168,11 +180,11 @@ class FC(object):
         steps = set(steps)
         for n_step in steps:
             computs[n_step]
-        output = {'correlations': self.corr,
-                  'partial correlations': self.partial_corr,
-                  'covariances': self.cov,
-                  'precisions': self.prec,
-                  'tangent plane': self.tangent}
+        output = {'correlations': self.corr_,
+                  'partial correlations': self.partial_corr_,
+                  'covariances': self.cov_,
+                  'precisions': self.prec_,
+                  'tangent plane': self.tangent_}
         self.conn = {}
         for measure_name in args:
             self.conn[measure_name] = output[measure_name]
@@ -213,7 +225,9 @@ def analysis(region_signals, standardize=False, *args):
         myFC.compute(*args)
         for n_measure, measure_name in enumerate(args):
             if n_subject == 0:
+                print(measure_name)
                 n_features = myFC.conn[measure_name].shape[0]
+                print("{}, {}".format(n_features, n_subjects))
                 fcs.append(np.empty((n_subjects, n_features, n_features)))
 
             fcs[n_measure][n_subject] = myFC.conn[measure_name]
@@ -228,7 +242,7 @@ if __name__ == "__main__":
 
     # Load conditions names and ROIs time series
     df, region_signals = load_data(
-        root_dir="/media/Elements/volatile/new/salma",
+        root_dir="/home",  # /media/Elements/volatile/new/salma",
         data_set="ds107")
     df2 = get_region_signals(df, region_signals)
     groups = df2.groupby("condition")

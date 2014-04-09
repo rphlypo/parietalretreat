@@ -101,7 +101,10 @@ def plot_adjacency(G,
                    trim=True,
                    col_map=None,
                    n_clusters=None,
-                   plot_figure=True):
+                   plot_figure=True,
+                   title=None,
+                   vmin=0.,
+                   vmax=1.):
     if col_map == "hot":
         cmap = plt.cm.hot
     elif col_map == "red_blue":
@@ -133,7 +136,10 @@ def plot_adjacency(G,
     if not plot_figure:
         return cluster_labels
     plt.figure()
-    plt.imshow(G, vmin=0., vmax=1., interpolation='nearest',
+    if vmin is None and vmax is None:
+        vmax = np.max(np.abs(G))
+        vmin = -vmax
+    plt.imshow(G, vmin=vmin, vmax=vmax, interpolation='nearest',
                cmap=cmap)
     ax = plt.gca()
     ax.xaxis.set_ticks_position("top")
@@ -146,6 +152,8 @@ def plot_adjacency(G,
         plt.axhline(y=ref, xmin=-0.5, xmax=p - 0.5, linewidth=2)
         plt.axvline(x=ref, ymin=-0.5, ymax=p - 0.5, linewidth=2)
     plt.colorbar()
+    if title is not None:
+        plt.suptitle(title)
     plt.show()
     return cluster_labels
 

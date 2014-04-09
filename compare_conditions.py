@@ -20,7 +20,7 @@ def results(fcs, tests, corrected=False): # TODO: add masking option
                   'covariances':identity,
                   'precisions':identity,
                   'tangent plane':identity}
-    results_ = {}                    
+    results_ = {}
     for the_cond_names, the_covs in tests:
         # sanity check
         if not set(the_cond_names).issubset(cond_names):
@@ -39,11 +39,11 @@ def results(fcs, tests, corrected=False): # TODO: add masking option
             #the_fcs = [np.array(the_fc)[np.newaxis,...] for the_fc in the_fcs]
             comp = Comparison(the_cov_values, the_fcs,
                               transforms[measure_name], corrected)
-            comp.stats()      
+            comp.stats()
             results_[(test_name,measure_name)] = comp.stats_difference_
-        print(test_name+' compared.')                
+        print(test_name+' compared.')
     return results_
-        
+
 if __name__ == "__main__":
     df, region_signals = load_data(root_dir="/media/Elements/volatile/new/salma",
                            data_set="ds107")
@@ -57,18 +57,18 @@ if __name__ == "__main__":
         for ix_ in range(len(group)):
             the_cond_signals.append(group.iloc[ix_]["region_signals"])
         all_cond_signals.append(the_cond_signals)
-        
+
     fcs = {}
     for cond_name, region_signals in zip(cond_names, all_cond_signals):
         print(cond_name)
         fc = analysis(region_signals, True, "covariances",
                       "precisions", "tangent plane")
-        for measure_name, measure_values in fc.iteritems():                    
-            fcs[(cond_name, measure_name)] = measure_values            
+        for measure_name, measure_values in fc.iteritems():
+            fcs[(cond_name, measure_name)] = measure_values
     if False:
         group_all = np.ones((1,n_subjects))
         group = {'All': group_all}
         words = 'Words'
-        objects = 'Objects'          
+        objects = 'Objects'
         paired_tests = [([words, objects], group)]
         mc.results(paired_tests)
