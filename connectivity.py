@@ -7,6 +7,7 @@ Created on Thu Apr 10 14:19:55 2014
 
 import numpy as np
 from scipy.linalg.lapack import get_lapack_funcs
+from scipy.linalg import logm
 
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.covariance import EmpiricalCovariance
@@ -112,10 +113,12 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
         """
         covs = [self.cov_estimator_.fit(x).covariance_ for x in X]
         covs = my_stack(covs)
-        p = covs.shape[-1]
         if self.kind == 'tangent':
-            id_ = np.identity(p)
-            covs = [self.whitening_.dot(c.dot(self.whitening_)) - id_
+            #p = covs.shape[-1]
+            #id_ = np.identity(p)
+            #covs = [self.whitening_.dot(c.dot(self.whitening_)) - id_
+            #        for c in covs]      # Linearization of the exponential
+            covs = [logm(self.whitening_.dot(c.dot(self.whitening_)))
                     for c in covs]
         elif self.kind == 'precision':
             covs = [inv(g) for g in covs]
