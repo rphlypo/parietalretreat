@@ -111,7 +111,7 @@ def _regress(X, y):
 
 
 def statistical_test(estimators={'kind': 'tangent',
-                                 'base_estimator': None},
+                                 'cov_estimator': None},
                      root_dir="/"):
     df = get_data(root_dir=root_dir)
     grouped = df.groupby(["condition", "subj_id"])
