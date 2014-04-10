@@ -1,15 +1,17 @@
-# import nilearn
-# import sklearn
-import setup_data_paths
+import sys
+import copy
+import os.path
+
 import numpy as np
 import joblib
-import os.path
 from pandas import DataFrame
-import confound
+
 import scipy.linalg
 import scipy.stats.mstats
-from covariance import CovEmbedding
-from sklearn.covariance import EmpiricalCovariance, LedoitWolf
+
+from connectivity import CovEmbedding
+import setup_data_paths
+import confound
 
 
 def get_data(root_dir="/",
@@ -110,6 +112,53 @@ def _regress(X, y):
     return X - Q.dot(np.linalg.pinv(Q.T.dot(Q))).dot(Q.T.dot(X))
 
 
+def corr_to_Z(corr):
+    """
+    Gives the Z-Fisher transformed correlation matrix. Correlations 1 and -1 
+    are transformed to nan.
+
+    Parameters
+    ==========
+    corr: np.array
+        correlation matrix    
+    
+    Returns
+    =======
+    Z: np.array
+        Z-Fisher transformed correlation matrix    
+    """
+    eps = sys.float_info.epsilon # 1/1e9
+    Z = copy.copy(corr)          # to avoid side effects
+    corr_is_one = 1.0 - abs(corr) < eps
+    Z[corr_is_one] = np.nan
+    Z[np.logical_not(corr_is_one)] =  np.arctanh(corr[np.logical_not(corr_is_one)]) #0.5*np.log((1+corr[1.0 - corr >= eps])/(1-corr[1.0 - corr >= eps]))    
+    return Z
+    
+    
+def var_stabilize(X, kind):
+    """Applies to each entry of an array the correct variance stablizing transform
+    
+    Parameters
+    ==========
+    X: array
+        input data
+        
+    kind: str
+        covariance embedding kind
+    
+    Returns
+    =======
+    X: array
+        transformed data, same shape as Y    
+    """
+    if kind in ['correlation', 'partial correlation']:
+        Y = corr_to_Z(X)
+    else:
+        Y = X
+        
+    return Y    
+    
+
 def statistical_test(estimators={'kind': 'tangent',
                                  'cov_estimator': None},
                      root_dir="/"):
@@ -130,8 +179,9 @@ def statistical_test(estimators={'kind': 'tangent',
                 cond.append(group[group["condition"] == condition2]
                             ["region_signals"].iloc[0])
             X = CovEmbedding(**estimators).fit_transform(cond)
-            t_stat, p = scipy.stats.mstats.ttest_rel(X[::2, ...],
-                                                     X[1::2, ...],
+            Y = var_stabilize(X,estimators['kind'])
+            t_stat, p = scipy.stats.mstats.ttest_rel(Y[::2, ...],
+                                                     Y[1::2, ...],
                                                      axis=0)
             print "{} vs. {}: t_stat = {}, p-val = {}".format(
                 condition1, condition2, t_stat, p)
