@@ -112,7 +112,8 @@ def _regress(X, y):
 
 def statistical_test(estimators={'kind': 'tangent',
                                  'base_estimator': None},
-                     root_dir="/"):
+                     root_dir="/",
+                     verbose=0):
     df = get_data(root_dir=root_dir)
     grouped = df.groupby(["condition", "subj_id"])
     conditions = _get_conditions(root_dir=root_dir)
@@ -133,8 +134,9 @@ def statistical_test(estimators={'kind': 'tangent',
             t_stat, p = scipy.stats.mstats.ttest_rel(X[::2, ...],
                                                      X[1::2, ...],
                                                      axis=0)
-            print "{} vs. {}: t_stat = {}, p-val = {}".format(
-                condition1, condition2, t_stat, p)
+            if verbose:
+                print "{} vs. {}: t_stat = {}, p-val = {}".format(
+                    condition1, condition2, t_stat, p)
             dict_list.append(
                 dict(zip(*[entries,
                            ("{} vs. {}".format(condition1, condition2),
