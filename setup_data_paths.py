@@ -5,12 +5,15 @@ import pandas
 import copy
 
 
-def get_all_paths(data_set=None, root_dir="/"):
+def get_all_paths(data_set="hcp", root_dir="/storage/data"):
     # TODO
     # if data_set ... collections.Sequence
     # iterate over list
     if data_set is None:
-        data_set = {"hcp", "henson2010faces", "ds105", "ds107"}
+        data_set = ["hcp", "henson2010faces", "ds105", "ds107"]
+        root_dir = ["/storage/data", "/storage/workspace/brainpedia/preproc",
+                    "/storage/workspace/brainpedia/preproc",
+                    "/storage/workspace/brainpedia/preproc"]
     head, tail_ = os.path.split(os.path.normpath(root_dir))
     counter = 0
     while tail_:
@@ -19,17 +22,17 @@ def get_all_paths(data_set=None, root_dir="/"):
 
     if hasattr(data_set, "__iter__"):
         df_ = list()
-        for ds in data_set:
-            df_.append(get_all_paths(data_set=ds, root_dir=root_dir))
+        for (ds, rd) in zip(data_set, root_dir):
+            df_.append(get_all_paths(data_set=ds, root_dir=rd))
         df = pandas.concat(df_, keys=data_set)
     elif data_set.startswith("ds") or data_set == "henson2010faces":
+        base_path = os.path.join(root_dir, data_set)
         list_ = list()
-        base_path = os.path.join(root_dir,
-                                 "storage/workspace/brainpedia/preproc/",
-                                 data_set)
-        with open(os.path.join(base_path, "models",
+        with open(os.path.join(base_path,
+                               "models",
                                "model001",
                                "condition_key.txt")) as f:
+            # read conditions from file
             conditions = list()
             while True:
                 try:
@@ -43,20 +46,21 @@ def get_all_paths(data_set=None, root_dir="/"):
                 except StopIteration:
                     break
         with open(os.path.join(base_path, "scan_key.txt")) as file_:
-            TR = file_.readline()[3:-1]
+            TR = file_.readline()[3:-1]  # last char is linefeed
         cnt = 0
         for fun_path in sorted(glob.glob(
             os.path.join(base_path,
                          "sub*/model/model*/BOLD/task*/bold.nii.gz"))):
             head, tail_ = os.path.split(fun_path)
-            tail = [tail_]
+            tail = list()
             while tail_:
-                head, tail_ = os.path.split(head)
                 tail.append(tail_)
+                head, tail_ = os.path.split(head)
             tail.reverse()
-            subj_id = tail[6 + counter][-3:]
-            model = tail[8 + counter][-3:]
-            task, run = tail[10 + counter].split("_")
+            print tail
+            subj_id = tail[counter][-3:]
+            model = tail[2 + counter][-3:]
+            task, run = tail[4 + counter].split("_")
 
             tmp_base = os.path.split(os.path.split(os.path.split(
                 fun_path)[0])[0])[0]
@@ -92,27 +96,27 @@ def get_all_paths(data_set=None, root_dir="/"):
                 cnt += 1
         df = DataFrame(list_)
     elif data_set == "hcp":
-        base_path = os.path.join(root_dir, "storage/data/HCP/Q2/")
-        for fun_path in glob.iglob(os.path.join(base_path,
-                                                "*/MNINonLinear/Results/",
-                                                "*/*.nii.gz")):
+        base_path = os.path.join(root_dir, "HCP/Q2/")
+        list_ = list()
+        for fun_path in sorted(glob.glob(os.path.join(
+                base_path, "*/MNINonLinear/Results/", "*/*.nii.gz"))):
 
-            head, tail = os.path.split(fun_path)
+            head, tail_ = os.path.split(fun_path)
             if head[-2:] not in ["LR", "RL"]:
                 continue
-            tail = [tail]
-            while head != "/":
-                head, t = os.path.split(head)
-                tail.append(t)
+            tail = list()
+            while tail_:
+                tail.append(tail_)
+                head, tail_ = os.path.split(head)
             if tail[0][:-7] != tail[1]:
                 continue
             tail.reverse()
-            subj_id = tail[4 + counter]
-            task = tail[7 + counter][6:-3]
-            if tail[7 + counter].startswith("rfMRI"):
+            subj_id = tail[2 + counter]
+            task = tail[5 + counter][6:-3]
+            if tail[5 + counter].startswith("rfMRI"):
                 run = task[-1]
                 task = task[:-1]
-            mode = tail[7 + counter][-2:]
+            mode = tail[5 + counter][-2:]
 
             anat = os.path.join(base_path, subj_id, "MNINonLinear/T1w.nii.gz")
 
@@ -125,7 +129,7 @@ def get_all_paths(data_set=None, root_dir="/"):
                           "anat": anat,
                           "confds": confds,
                           "TR": 0.72})
-            if tail[8 + counter].startswith("rfMRI"):
+            if tail[5 + counter].startswith("rfMRI"):
                 list_[-1]["run"] = run
             else:
                 onsets = [onset
