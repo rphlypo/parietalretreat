@@ -1,13 +1,8 @@
 import warnings
 
 import numpy as np
-from numpy.testing import assert_array_less
+from numpy.testing import assert_array_less, assert_array_almost_equal
 from scipy import linalg
-from scipy.linalg.lapack import get_lapack_funcs
-
-
-# Bypass scipy for faster eigh (and dangerous: Nan will kill it)
-my_eigh, = get_lapack_funcs(('syevr', ), np.zeros(1))
 
 
 def my_stack(arrays):
@@ -17,35 +12,40 @@ def my_stack(arrays):
 def sqrtm(mat):
     """ Matrix square-root, for symetric positive definite matrices.
     """
-    vals, vecs, success_flag = my_eigh(mat)
+    vals, vecs = linalg.eigh(mat)
     return np.dot(vecs * np.sqrt(vals), vecs.T)
 
 
 def inv_sqrtm(mat):
     """ Inverse of matrix square-root, for symetric positive definite matrices.
     """
-    vals, vecs, success_flag = my_eigh(mat)
+    vals, vecs = linalg.eigh(mat)
     return np.dot(vecs / np.sqrt(vals), vecs.T)
 
 
 def inv(mat):
     """ Inverse of matrix, for symetric positive definite matrices.
     """
-    vals, vecs, success_flag = my_eigh(mat)
+    vals, vecs = linalg.eigh(mat)
     return np.dot(vecs / vals, vecs.T)
 
 
 def logm(mat):
     """ Logarithm of matrix, for symetric positive definite matrices
     """
-    vals, vecs, success_flag = my_eigh(mat)
+    vals, vecs = linalg.eigh(mat)
     return np.dot(vecs * np.log(vals), vecs.T)
 
 
 def expm(mat):
-    """ Exponential of matrix, for symetric positive definite matrices
+    """ Exponential of matrix, for real symetric matrices
     """
-    vals, vecs, success_flag = my_eigh(mat)
+    try:
+        assert_array_almost_equal(mat, mat.T)
+        assert(np.all(np.isreal(mat)))
+    except AssertionError:
+        raise ValueError("at least one matrix is not real symmetric")
+    vals, vecs = linalg.eigh(mat)
     return np.dot(vecs * np.exp(vals), vecs.T)
 
 
@@ -62,15 +62,15 @@ def log_map(x, displacement, mean=False):
         P. Thomas Fletcher, Sarang Joshi. Riemannian Geometry for the
         Statistical Analysis of Diffusion Tensor Data. Signal Processing, 2007.
     """
-    vals, vecs, success_flag = my_eigh(displacement)
+    vals, vecs = linalg.eigh(displacement)
     sqrt_vals = np.sqrt(vals)
     whitening = (vecs / sqrt_vals).T
-    vals_y, vecs_y, success_flag = my_eigh(whitening.dot(x).dot(whitening.T))
+    vals_y, vecs_y = linalg.eigh(whitening.dot(x).dot(whitening.T))
     sqrt_displacement = (vecs * sqrt_vals).dot(vecs_y)
     return (sqrt_displacement * np.log(vals_y)).dot(sqrt_displacement.T)
 
 
-def frechet_mean(mats, max_iter=10, tol=1e-3):
+def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
     """ Computes Frechet mean of a list of symmetric positive definite
     matrices.
 
@@ -97,9 +97,14 @@ def frechet_mean(mats, max_iter=10, tol=1e-3):
     fre: array
         Frechet mean of the matrices.
     """
-    # Positive definiteness check
+    # Real, symmetry and positive definiteness check
     for mat in mats:
-        assert_array_less(0.0, my_eigh(mat)[0])
+        try:
+            assert_array_almost_equal(mat, mat.T)
+            assert(np.all(np.isreal(mat)))
+            assert_array_less(0.0, np.linalg.eigvalsh(mat))
+        except AssertionError:
+            raise ValueError("at least one matrix is not real spd")
 
     mats = my_stack(mats)
 
@@ -109,44 +114,49 @@ def frechet_mean(mats, max_iter=10, tol=1e-3):
     norm_old = np.inf
     step = 1.
     for n in xrange(max_iter):
-        vals_fre, vecs_fre, success_flag = my_eigh(fre)
+        vals_fre, vecs_fre = linalg.eigh(fre)
         fre_inv_sqrt = (vecs_fre / np.sqrt(vals_fre)).dot(vecs_fre.T)
-        eighs = [my_eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for mat in
-        mats]
+        eighs = [linalg.eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for
+        mat in mats]
 
         # Log map of mats[n] at point fre is
         # sqrtm(fre).dot(logms[n]).dot(sqrtm(fre))
-        logms = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs, success_flag
-        in eighs]
+        logms = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs in eighs]
 
         # Covariant derivative is fre.dot(logms_mean)
         logms_mean = np.mean(logms, axis=0)
-        assert np.all(np.isfinite(logms_mean))
+        try:
+            assert np.all(np.isfinite(logms_mean))
+        except AssertionError:
+            raise FloatingPointError("Nan value after logarithm operation")
+
+        vals_log, vecs_log = linalg.eigh(logms_mean)
+
+        # Move along the geodesic with stepsize step
+        fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
+        fre = fre_sqrt.dot(
+        vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
 
         # Norm of the covariant derivative on the tangent space at point fre
-        norm_new = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
-        if tol is not None and norm_new < tol:
+        norm = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
+        if tol is not None and norm < tol:
             tolerance_reached = True
             break
 
-        if norm_new > norm_old:
+        if norm > norm_old:
             step = step / 2.
-        else:
-            vals_log, vecs_log, success_flag = my_eigh(logms_mean)
-
-            # Move along the geodesic with stepsize step
-            fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
-            fre = fre_sqrt.dot(
-            vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
+            norm = norm_old
+        if norm < norm_old and adaptative:
+            step = 2. * step
 
     if tol is not None and not tolerance_reached:
-        warnings.warn("Maximum number of iterations reached without getting "
-                      "to the requested tolerance level.")
+        warnings.warn("Maximum number of iterations reached without")# +\
+#                      " getting to the requested tolerance level.")
 
     return fre
 
 
-def grad_frechet_mean(mats, max_iter=10, tol=1e-3):
+def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
     """ Returns at each iteration step of the frechet_mean algorithm the norm
     of the covariant derivative. Norm is intrinsic norm on the tangent space at
     the Frechet mean at the current step.
@@ -165,9 +175,14 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3):
     grad_norm: list of float
         Norm of the covariant derivative in the tangent space at each step.
     """
-    # Positive definiteness check
+    # Real, symmetry and positive definiteness check
     for mat in mats:
-        assert_array_less(0.0, my_eigh(mat)[0])
+        try:
+            assert_array_almost_equal(mat, mat.T)
+#            assert(np.all(np.isreal(mat)))
+#            assert_array_less(0.0, np.linalg.eigvalsh(mat))
+        except AssertionError:
+            raise ValueError("at least one matrix is not real spd")
 
     mats = my_stack(mats)
 
@@ -175,61 +190,78 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3):
     fre = np.mean(mats, axis=0)
     norm_old = np.inf
     step = 1.
+    tolerance_reached = False
     grad_norm = []
     for n in xrange(max_iter):
-        vals_fre, vecs_fre, success_flag = my_eigh(fre)
+        vals_fre, vecs_fre = linalg.eigh(fre)
         fre_inv_sqrt = (vecs_fre / np.sqrt(vals_fre)).dot(vecs_fre.T)
-        eighs = [my_eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for mat in
-        mats]
+        eighs = [linalg.eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for
+        mat in mats]
 
         # Log map of mats[n] at point fre is
         # sqrtm(fre).dot(logms[n]).dot(sqrtm(fre))
-        logms = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs, success_flag
-        in eighs]
+        logms = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs in eighs]
 
         # Covariant derivative is fre.dot(logms_mean)
         logms_mean = np.mean(logms, axis=0)
-        assert np.all(np.isfinite(logms_mean))
+        try:
+            assert np.all(np.isfinite(logms_mean))
+        except AssertionError:
+            raise FloatingPointError("Nan value after logarithm operation")
+
+        vals_log, vecs_log = linalg.eigh(logms_mean)
+
+        # Move along the geodesic with stepsize step
+        fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
+        fre = fre_sqrt.dot(
+        vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
 
         # Norm of the covariant derivative on the tangent space at point fre
-        norm_new = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
-        if tol is not None and norm_new < tol:
-            grad_norm.append(norm_new)
+        norm = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
+        grad_norm.append(norm)
+        if tol is not None and norm < tol:
+            tolerance_reached = True
             break
 
-        if norm_new > norm_old:
+        if norm > norm_old:
             step = step / 2.
-            grad_norm.append(norm_old)
-        else:
-            grad_norm.append(norm_new)
-            vals_log, vecs_log, success_flag = my_eigh(logms_mean)
+            norm = norm_old
 
-            # Move along the geodesic with stepsize step
-            fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
-            fre = fre_sqrt.dot(
-            vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
+    if tol is not None and not tolerance_reached:
+        warnings.warn("Maximum number of iterations reached without")# +\
+#                      " getting to the requested tolerance level.")
 
     return grad_norm
 
 
-def random_diagonal_spd(shape):
+def random_diagonal(shape, d_min=0., d_max=1.):
+    """Generates random diagonal matrix, with elements in the range
+    [d_min, d_max]
+    """
+    d = np.random.rand(shape) * (d_max - d_min) + d_min
+    return np.diag(d)
+
+
+def random_diagonal_spd(shape, d_min=1., d_max=2.):
     """Generates random positive definite diagonal matrix"""
-    d = np.random.rand(shape, )
-    return np.diag(d ** 2 + 1.)
+    assert(d_min > 0)
+    assert(d_max > 0)
+    return random_diagonal(shape, d_min, d_max)
 
 
-def random_spd(shape):
+def random_spd(shape, eig_min=1.0, eig_max=2.0):
     """Generates random symmetric positive definite matrix"""
     ran = np.random.rand(shape, shape)
-    spd = ran.dot(ran.T) + np.eye(shape)  # spd, but possibly badly
-                                          # conditionned
-    vals, vecs, suc = my_eigh(spd)
-    d = random_diagonal_spd(shape)
-    return vecs.dot(d).dot(vecs.T)
+    q, _ = linalg.qr(ran)
+    d = random_diagonal_spd(shape, eig_min, eig_max)
+    return q.dot(d).dot(q.T)
 
 
 def random_non_singular(shape):
     """Generates random non singular matrix"""
     d = random_diagonal_spd(shape)
-    u = random_spd(shape)
-    return linalg.inv(u).dot(d).dot(u)
+    ran1 = np.random.rand(shape, shape)
+    ran2 = np.random.rand(shape, shape)
+    u, _ = linalg.qr(ran1)
+    v, _ = linalg.qr(ran2)
+    return u.dot(d).dot(v.T)
