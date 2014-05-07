@@ -190,5 +190,7 @@ def test_frechet_mean():  # TODO: test suite and split in several tests
 #    app_fre = my_mfd.frechet_mean(spds, tol=tol)
 #    assert_array_almost_equal(app_fre, exact_fre, decimal)
 
+
+# TODO: test function is_spd
 if __name__ == "__main__":
     nose.run()

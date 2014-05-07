@@ -23,8 +23,6 @@ def sym_to_vec(sym):
     p = sym.shape[-1]
     sym.flat[::p + 1] = sym.flat[::p + 1] / np.sqrt(2)
     mask = np.tril(np.ones(sym.shape[-2:])).astype(np.bool)
-    print(sym[..., mask].shape)
-    print("ok*****")
     return sym[..., mask]
 
 
@@ -52,6 +50,12 @@ def vec_to_sym(vec):
 def cov_to_corr(cov):
     return cov * np.diag(cov) ** (-1. / 2) *\
         (np.diag(cov) ** (-1. / 2))[..., np.newaxis]
+
+
+def prec_to_partial(prec):
+    partial = -cov_to_corr(prec)
+    np.fill_diagonal(partial, 1.)
+    return partial
 
 
 class CovEmbedding(BaseEstimator, TransformerMixin):
@@ -97,11 +101,11 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
         elif self.kind == 'precision':
             covs = [spd_mfd.inv(g) for g in covs]
         elif self.kind == 'partial correlation':
-            covs = [np.fill_diagonal(-cov_to_corr(spd_mfd.inv(g)), 1.) for g in
+            covs = [prec_to_partial(spd_mfd.inv(g)) for g in
             covs]
         elif self.kind == 'correlation':
             covs = [cov_to_corr(g) for g in covs]
         else:
             raise ValueError("Unknown connectivity measure.")
-
+        print(self.kind)
         return np.array([sym_to_vec(c) for c in covs])
