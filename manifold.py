@@ -179,8 +179,8 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
     for mat in mats:
         try:
             assert_array_almost_equal(mat, mat.T)
-#            assert(np.all(np.isreal(mat)))
-#            assert_array_less(0.0, np.linalg.eigvalsh(mat))
+            assert(np.all(np.isreal(mat)))
+            assert_array_less(0.0, np.linalg.eigvalsh(mat))
         except AssertionError:
             raise ValueError("at least one matrix is not real spd")
 

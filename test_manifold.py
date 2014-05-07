@@ -90,6 +90,7 @@ def test_covariant_derivative():
     """Testing covariant_derivative function"""
 
 
+
 def test_frechet_mean():  # TODO: test suite and split in several tests
     """Testing frechet_mean function"""
     n = random.randint(3, 50)

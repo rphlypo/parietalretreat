@@ -8,9 +8,9 @@ import manifold as spd_mfd
 
 def sym_to_vec(sym):
     """ Returns the lower triangular part of
-    sqrt(2) (sym - Id) + (1-sqrt(2)) * diag(sym - Id),
+    sqrt(2) sym + (1-sqrt(2)) * diag(sym),
 
-    sqrt(2) * offdiag(sym) + np.diag(np.diag(sym)) - Id
+    sqrt(2) * offdiag(sym) + np.diag(np.diag(sym))
 
     shape n (n+1) /2, with n = sym.shape[0]
 
@@ -33,7 +33,7 @@ def vec_to_sym(vec):
     # p = - 1 / 2 + sqrt( 1 + 8 * n) / 2
     p = int((np.sqrt(8 * n + 1) - 1.) / 2)
     mask = np.tril(np.ones((p, p))).astype(np.bool)
-    sym = np.empty((p, p), dtype=np.float)
+    sym = np.zeros((p, p), dtype=np.float)
     sym[..., mask] = vec
     sym = (sym + sym.T) / np.sqrt(2)  # divide by 2 multiply by sqrt(2)
     sym.flat[::p + 1] = sym.flat[::p + 1] / np.sqrt(2)
@@ -63,8 +63,8 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
 
         if self.kind == 'tangent':
             covs = [self.cov_estimator_.fit(x).covariance_ for x in X]
-            mean_cov = spd_mfd.frechet_mean(covs, max_iter=30, tol=1e-7)
-            self.whitening_ = spd_mfd.inv_sqrtm(mean_cov)
+            self.mean_cov_ = spd_mfd.frechet_mean(covs, max_iter=30, tol=1e-7)
+            self.whitening_ = spd_mfd.inv_sqrtm(self.mean_cov_)
         return self
 
     def transform(self, X):
