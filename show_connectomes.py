@@ -104,7 +104,8 @@ def plot_adjacency(G,
                    plot_figure=True,
                    title=None,
                    vmin=0.,
-                   vmax=1.):
+                   vmax=1.,
+                   fig_name=False):
     if col_map == "hot":
         cmap = plt.cm.hot
     elif col_map == "red_blue":
@@ -135,7 +136,7 @@ def plot_adjacency(G,
 
     if not plot_figure:
         return cluster_labels
-    plt.figure()
+    fig = plt.figure()
     if vmin is None and vmax is None:
         vmax = np.max(np.abs(G))
         vmin = -vmax
@@ -155,6 +156,9 @@ def plot_adjacency(G,
     if title is not None:
         plt.suptitle(title)
     plt.show()
+    if fig_name:
+        fig.savefig(fig_name, bbox_inches='tight')
+        plt.close(fig)
     return cluster_labels
 
 

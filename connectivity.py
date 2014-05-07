@@ -23,8 +23,8 @@ def sym_to_vec(sym):
     p = sym.shape[-1]
     sym.flat[::p + 1] = sym.flat[::p + 1] / np.sqrt(2)
     mask = np.tril(np.ones(sym.shape[-2:])).astype(np.bool)
-    print(sym[..., mask].shape)
-    print("ok*****")
+    # print(sym[..., mask].shape)
+    # print("ok*****")
     return sym[..., mask]
 
 
@@ -38,7 +38,7 @@ def vec_to_sym(vec):
         np.testing.assert_almost_equal(p, int(p))
     except AssertionError:
         raise ValueError("Vector size unsuitable, can not transform vector to "
-                        "symmetric matrix")
+                         "symmetric matrix")
 
     p = int(p)
     mask = np.tril(np.ones((p, p))).astype(np.bool)
@@ -98,7 +98,7 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
             covs = [spd_mfd.inv(g) for g in covs]
         elif self.kind == 'partial correlation':
             covs = [np.fill_diagonal(-cov_to_corr(spd_mfd.inv(g)), 1.) for g in
-            covs]
+                    covs]
         elif self.kind == 'correlation':
             covs = [cov_to_corr(g) for g in covs]
         else:

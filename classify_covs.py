@@ -11,12 +11,13 @@ import scipy.stats.mstats
 
 from connectivity import CovEmbedding
 import setup_data_paths
+reload(setup_data_paths)
 import confound
 
 
 def get_data(root_dir="/",
              data_set="ds107",
-             dump_file="storage/workspace/parietal_retreat/" +
+             dump_file="/home/storage/workspace/parietal_retreat/" +
              "covariance_learn/dump/results.pkl"):
     df, region_signals = _load_data(root_dir=root_dir,
                                     data_set=data_set,
@@ -26,7 +27,7 @@ def get_data(root_dir="/",
 
 def _load_data(root_dir="/",
                data_set="ds107",
-               dump_file="storage/workspace/parietal_retreat/" +
+               dump_file="/home/storage/workspace/parietal_retreat/" +
                "covariance_learn/dump/results.pkl"):
     df = setup_data_paths.get_all_paths(root_dir=root_dir, data_set="ds107")
     region_signals = joblib.load(os.path.join(root_dir, dump_file))
@@ -35,7 +36,6 @@ def _load_data(root_dir="/",
 
 def _get_conditions(root_dir, data_set="ds107"):
     data_set_dir = os.path.join(root_dir,
-                                "storage/workspace/brainpedia/preproc",
                                 data_set,
                                 "models/model001/condition_key.txt")
 
@@ -114,50 +114,52 @@ def _regress(X, y):
 
 def corr_to_Z(corr):
     """
-    Gives the Z-Fisher transformed correlation matrix. Correlations 1 and -1 
+    Gives the Z-Fisher transformed correlation matrix. Correlations 1 and -1
     are transformed to nan.
 
     Parameters
     ==========
     corr: np.array
-        correlation matrix    
-    
+        correlation matrix
+
     Returns
     =======
     Z: np.array
-        Z-Fisher transformed correlation matrix    
+        Z-Fisher transformed correlation matrix
     """
-    eps = sys.float_info.epsilon # 1/1e9
-    Z = copy.copy(corr)          # to avoid side effects
+    eps = sys.float_info.epsilon  # 1/1e9
+    Z = copy.copy(corr)           # to avoid side effects
     corr_is_one = 1.0 - abs(corr) < eps
     Z[corr_is_one] = np.nan
-    Z[np.logical_not(corr_is_one)] =  np.arctanh(corr[np.logical_not(corr_is_one)]) #0.5*np.log((1+corr[1.0 - corr >= eps])/(1-corr[1.0 - corr >= eps]))    
+    #0.5*np.log((1+corr[1.0 - corr >= eps])/(1-corr[1.0 - corr >= eps]))
+    Z[np.logical_not(corr_is_one)] = \
+        np.arctanh(corr[np.logical_not(corr_is_one)])
     return Z
-    
-    
+
+
 def var_stabilize(X, kind):
-    """Applies to each entry of an array the correct variance stablizing transform
-    
+    """Apply to each entry of array the variance stabilizing transform
+
     Parameters
     ==========
     X: array
         input data
-        
+
     kind: str
         covariance embedding kind
-    
+
     Returns
     =======
     X: array
-        transformed data, same shape as Y    
+        transformed data, same shape as Y
     """
     if kind in ['correlation', 'partial correlation']:
         Y = corr_to_Z(X)
     else:
         Y = X
-        
-    return Y    
-    
+
+    return Y
+
 
 def statistical_test(estimators={'kind': 'tangent',
                                  'cov_estimator': None},
@@ -179,7 +181,7 @@ def statistical_test(estimators={'kind': 'tangent',
                 cond.append(group[group["condition"] == condition2]
                             ["region_signals"].iloc[0])
             X = CovEmbedding(**estimators).fit_transform(cond)
-            Y = var_stabilize(X,estimators['kind'])
+            Y = var_stabilize(X, estimators['kind'])
             t_stat, p = scipy.stats.mstats.ttest_rel(Y[::2, ...],
                                                      Y[1::2, ...],
                                                      axis=0)
