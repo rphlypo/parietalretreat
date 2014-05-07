@@ -23,6 +23,8 @@ def sym_to_vec(sym):
     p = sym.shape[-1]
     sym.flat[::p + 1] = sym.flat[::p + 1] / np.sqrt(2)
     mask = np.tril(np.ones(sym.shape[-2:])).astype(np.bool)
+    print(sym[..., mask].shape)
+    print("ok*****")
     return sym[..., mask]
 
 
@@ -31,7 +33,14 @@ def vec_to_sym(vec):
     # solve p * (p + 1) / 2 = n subj. to p > 0
     # p ** 2 + p - 2n = 0 & p > 0
     # p = - 1 / 2 + sqrt( 1 + 8 * n) / 2
-    p = int((np.sqrt(8 * n + 1) - 1.) / 2)
+    p = (np.sqrt(8 * n + 1) - 1.) / 2
+    try:
+        np.testing.assert_almost_equal(p, int(p))
+    except AssertionError:
+        raise ValueError("Vector size unsuitable, can not transform vector to "
+                        "symmetric matrix")
+
+    p = int(p)
     mask = np.tril(np.ones((p, p))).astype(np.bool)
     sym = np.zeros((p, p), dtype=np.float)
     sym[..., mask] = vec
