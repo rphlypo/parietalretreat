@@ -52,6 +52,12 @@ def cov_to_corr(cov):
         (np.diag(cov) ** (-1. / 2))[..., np.newaxis]
 
 
+def prec_to_partial(prec):
+    partial = -cov_to_corr(prec)
+    np.fill_diagonal(partial, 1.)
+    return partial
+
+
 class CovEmbedding(BaseEstimator, TransformerMixin):
     """ Tranformer that returns the coefficients on a flat space to
     perform the analysis.
