@@ -24,7 +24,7 @@ def inv_sqrtm(mat):
 
 
 def inv(mat):
-    """ Inverse of matrix, for symetric positive definite matrices.
+    """ Inverse of matrix, for symmetric positive definite matrices.
     """
     vals, vecs = linalg.eigh(mat)
     return np.dot(vecs / vals, vecs.T)
@@ -117,7 +117,7 @@ def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
         vals_fre, vecs_fre = linalg.eigh(fre)
         fre_inv_sqrt = (vecs_fre / np.sqrt(vals_fre)).dot(vecs_fre.T)
         eighs = [linalg.eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for
-        mat in mats]
+                 mat in mats]
 
         # Log map of mats[n] at point fre is
         # sqrtm(fre).dot(logms[n]).dot(sqrtm(fre))
@@ -135,7 +135,7 @@ def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
         # Move along the geodesic with stepsize step
         fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
         fre = fre_sqrt.dot(
-        vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
+            vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
 
         # Norm of the covariant derivative on the tangent space at point fre
         norm = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
@@ -150,7 +150,7 @@ def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
             step = 2. * step
 
     if tol is not None and not tolerance_reached:
-        warnings.warn("Maximum number of iterations reached without")# +\
+        warnings.warn("Maximum number of iterations reached without")  # +\
 #                      " getting to the requested tolerance level.")
 
     return fre
@@ -196,7 +196,7 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
         vals_fre, vecs_fre = linalg.eigh(fre)
         fre_inv_sqrt = (vecs_fre / np.sqrt(vals_fre)).dot(vecs_fre.T)
         eighs = [linalg.eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for
-        mat in mats]
+                 mat in mats]
 
         # Log map of mats[n] at point fre is
         # sqrtm(fre).dot(logms[n]).dot(sqrtm(fre))
@@ -214,7 +214,7 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
         # Move along the geodesic with stepsize step
         fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
         fre = fre_sqrt.dot(
-        vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
+            vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
 
         # Norm of the covariant derivative on the tangent space at point fre
         norm = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
@@ -228,7 +228,7 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
             norm = norm_old
 
     if tol is not None and not tolerance_reached:
-        warnings.warn("Maximum number of iterations reached without")# +\
+        warnings.warn("Maximum number of iterations reached without")  # +\
 #                      " getting to the requested tolerance level.")
 
     return grad_norm

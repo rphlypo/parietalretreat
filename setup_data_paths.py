@@ -57,10 +57,9 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
                 tail.append(tail_)
                 head, tail_ = os.path.split(head)
             tail.reverse()
-            print tail
-            subj_id = tail[counter][-3:]
-            model = tail[2 + counter][-3:]
-            task, run = tail[4 + counter].split("_")
+            subj_id = tail[counter + 1][-3:]
+            model = tail[3 + counter][-3:]
+            task, run = tail[5 + counter].split("_")
 
             tmp_base = os.path.split(os.path.split(os.path.split(
                 fun_path)[0])[0])[0]

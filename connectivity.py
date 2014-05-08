@@ -36,7 +36,7 @@ def vec_to_sym(vec):
         np.testing.assert_almost_equal(p, int(p))
     except AssertionError:
         raise ValueError("Vector size unsuitable, can not transform vector to "
-                        "symmetric matrix")
+                         "symmetric matrix")
 
     p = int(p)
     mask = np.tril(np.ones((p, p))).astype(np.bool)
@@ -50,12 +50,6 @@ def vec_to_sym(vec):
 def cov_to_corr(cov):
     return cov * np.diag(cov) ** (-1. / 2) *\
         (np.diag(cov) ** (-1. / 2))[..., np.newaxis]
-
-
-def prec_to_partial(prec):
-    partial = -cov_to_corr(prec)
-    np.fill_diagonal(partial, 1.)
-    return partial
 
 
 class CovEmbedding(BaseEstimator, TransformerMixin):
@@ -107,5 +101,5 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
             covs = [cov_to_corr(g) for g in covs]
         else:
             raise ValueError("Unknown connectivity measure.")
-        print(self.kind)
+
         return np.array([sym_to_vec(c) for c in covs])
