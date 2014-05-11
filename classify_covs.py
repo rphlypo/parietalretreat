@@ -11,8 +11,9 @@ import scipy.stats.mstats
 
 from connectivity import CovEmbedding
 import setup_data_paths
-reload(setup_data_paths)
 import confound
+
+import pval_correction
 
 
 def get_data(root_dir="/",
@@ -163,7 +164,8 @@ def var_stabilize(X, kind):
 
 def statistical_test(estimators={'kind': 'tangent',
                                  'cov_estimator': None},
-                     root_dir="/"):
+                     root_dir="/",
+                     p_correction="fdr"):
     df = get_data(root_dir=root_dir)
     grouped = df.groupby(["condition", "subj_id"])
     conditions = _get_conditions(root_dir=root_dir)
@@ -185,6 +187,7 @@ def statistical_test(estimators={'kind': 'tangent',
             t_stat, p = scipy.stats.mstats.ttest_rel(Y[::2, ...],
                                                      Y[1::2, ...],
                                                      axis=0)
+            p = pval_correction.correct(p, correction=p_correction)
             print "{} vs. {}: t_stat = {}, p-val = {}".format(
                 condition1, condition2, t_stat, p)
             dict_list.append(
