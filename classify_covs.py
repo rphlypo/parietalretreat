@@ -32,7 +32,7 @@ def _load_data(root_dir="/",
                data_set="ds107",
                dump_file="/home/storage/workspace/parietal_retreat/" +
                "covariance_learn/dump/results.pkl"):
-    df = setup_data_paths.get_all_paths(root_dir=root_dir, data_set="ds107")
+    df = setup_data_paths.get_all_paths(root_dir=root_dir, data_set=data_set)
     region_signals = joblib.load(os.path.join(root_dir, dump_file))
     return df, region_signals
 
@@ -171,7 +171,7 @@ def statistical_test(estimators={'kind': 'tangent',
                      data_set="ds107"):
     df = get_data(root_dir=root_dir, data_set=data_set)
     grouped = df.groupby(["condition", "subj_id"])
-    conditions = _get_conditions(root_dir=root_dir)
+    conditions = _get_conditions(root_dir=root_dir, data_set=data_set)
     dict_list = list()
     entries = ("comparison", "tstat", "pval")
     for (ix1_, condition1) in enumerate(conditions):
