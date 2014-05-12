@@ -50,7 +50,7 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
         cnt = 0
         for fun_path in sorted(glob.glob(
             os.path.join(base_path,
-                         "sub*/model/model*/BOLD/task*/bold.nii.gz"))):
+                         "sub*/BOLD/task*/bold.nii.gz"))):
             head, tail_ = os.path.split(fun_path)
             tail = list()
             while tail_:
@@ -68,7 +68,8 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
                                 "anatomy",
                                 "highres{}.nii.gz".format(model[-3:]))
 
-            onsets = glob.glob(os.path.join(tmp_base, "onsets",
+            onsets = glob.glob(os.path.join(tmp_base, "model",
+                                            "model*", "onsets",
                                             "{}_{}".format(task, run),
                                             "cond*.txt"))
 
@@ -173,5 +174,10 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
 
 
 if __name__ == "__main__":
-    run(root_dir="/home", data_set=["ds107", "henson2010faces"],
-        dump_dir="storage/workspace/parietal_retreat/covariance_learn/")
+    run(root_dir=["/volatile/storage/workspace/brainpedia/preproc/",
+                  "/volatile/storage/workspace/brainpedia/preproc/",
+                  "/volatile/storage/workspace/brainpedia/preproc/"],
+        data_set=["ds105", "ds107", "henson2010faces"],
+        dump_dir="/volatile/storage/workspace/" +
+        "parietal_retreat/covariance_learn/",
+        n_jobs=20)
