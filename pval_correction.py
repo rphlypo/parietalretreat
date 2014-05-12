@@ -63,7 +63,7 @@ def bonferroni(p):
         if N1 > 0:
             q = N1 * p 
     else:        
-        q = np.array([fdr(p[j]) for j in range(p.shape[1])])
+        q = np.array([bonferroni(p[j]) for j in range(p.shape[-1])])
 
     return q
 
@@ -101,6 +101,6 @@ def fdr(p):
                 min1 = min(min1, qt[n])
                 q[idx[n]] = min1
     else:        
-        q = np.array([fdr(p[j]) for j in range(p.shape[1])])
+        q = np.array([fdr(p[j]) for j in range(p.shape[-1])])
 
     return q
