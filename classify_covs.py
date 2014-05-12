@@ -17,9 +17,11 @@ import pval_correction
 
 
 def get_data(root_dir="/",
-             data_set="ds107",
+             data_set=None,
              dump_file="/home/storage/workspace/parietal_retreat/" +
              "covariance_learn/dump/results.pkl"):
+    if data_set is None:
+        data_set = "ds107"
     df, region_signals = _load_data(root_dir=root_dir,
                                     data_set=data_set,
                                     dump_file=dump_file)
@@ -165,8 +167,9 @@ def var_stabilize(X, kind):
 def statistical_test(estimators={'kind': 'tangent',
                                  'cov_estimator': None},
                      root_dir="/",
-                     p_correction="fdr"):
-    df = get_data(root_dir=root_dir)
+                     p_correction="fdr",
+                     data_set="ds107"):
+    df = get_data(root_dir=root_dir, data_set=data_set)
     grouped = df.groupby(["condition", "subj_id"])
     conditions = _get_conditions(root_dir=root_dir)
     dict_list = list()
