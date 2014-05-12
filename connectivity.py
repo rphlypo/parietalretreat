@@ -101,8 +101,7 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
         elif self.kind == 'precision':
             covs = [spd_mfd.inv(g) for g in covs]
         elif self.kind == 'partial correlation':
-            covs = [prec_to_partial(spd_mfd.inv(g)) for g in
-            covs]
+            covs = [prec_to_partial(spd_mfd.inv(g)) for g in covs]
         elif self.kind == 'correlation':
             covs = [cov_to_corr(g) for g in covs]
         else:

@@ -131,7 +131,7 @@ def corr_to_Z(corr):
     eps = sys.float_info.epsilon  # 1/1e9
     Z = copy.copy(corr)           # to avoid side effects
     corr_is_one = 1.0 - abs(corr) < eps
-    Z[corr_is_one] = np.nan
+    Z[corr_is_one] = np.inf * np.sign(Z[corr_is_one])
     #0.5*np.log((1+corr[1.0 - corr >= eps])/(1-corr[1.0 - corr >= eps]))
     Z[np.logical_not(corr_is_one)] = \
         np.arctanh(corr[np.logical_not(corr_is_one)])
@@ -183,17 +183,17 @@ def statistical_test(estimators={'kind': 'tangent',
                 cond.append(group[group["condition"] == condition2]
                             ["region_signals"].iloc[0])
             X = CovEmbedding(**estimators).fit_transform(cond)
-            Y = var_stabilize(X, estimators['kind'])
-            t_stat, p = scipy.stats.mstats.ttest_rel(Y[::2, ...],
-                                                     Y[1::2, ...],
-                                                     axis=0)
-            p = pval_correction.correct(p, correction=p_correction)
-            print "{} vs. {}: t_stat = {}, p-val = {}".format(
-                condition1, condition2, t_stat, p)
+            Y = X  # var_stabilize(X, estimators['kind'])
+            t_stat, p = scipy.stats.ttest_rel(Y[::2, ...],
+                                              Y[1::2, ...],
+                                              axis=0)
+            q = pval_correction.correct(p, correction=p_correction)
+            print "{} vs. {}: t_stat = {}, q-val = {}".format(
+                condition1, condition2, t_stat, q)
             dict_list.append(
                 dict(zip(*[entries,
                            ("{} vs. {}".format(condition1, condition2),
-                            t_stat, p)])))
+                            t_stat, q)])))
     return DataFrame(dict_list, columns=entries)
 
 if __name__ == "__main__":
