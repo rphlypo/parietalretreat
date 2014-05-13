@@ -140,6 +140,7 @@ def corr_to_Z(corr):
     Z = copy.copy(corr)           # to avoid side effects
     corr_is_one = 1.0 - abs(corr) < eps
     Z[corr_is_one] = np.inf * np.sign(Z[corr_is_one])
+    #0.5*np.log((1+corr[1.0 - corr >= eps])/(1-corr[1.0 - corr >= eps]))
     Z[np.logical_not(corr_is_one)] = \
         np.arctanh(corr[np.logical_not(corr_is_one)])
     return Z
