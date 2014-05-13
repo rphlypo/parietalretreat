@@ -168,7 +168,7 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
         delayed(_data_fitting)(niimg, nmm, n_hv_confounds=5)
         for niimg in list(df["func"]))
     joblib.dump(region_ts,
-                os.path.join(dump_dir, "results/"))
+                os.path.join(dump_dir, "results.pkl"))
     region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
     df.join(region_signals)
     return df
