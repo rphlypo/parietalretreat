@@ -1,12 +1,13 @@
+import copy
+
 import numpy as np
 
 from sklearn.base import BaseEstimator, TransformerMixin, clone
 from sklearn.covariance import EmpiricalCovariance
-
 import manifold as spd_mfd
 
 
-def sym_to_vec(sym):
+def sym_to_vec(sym, isometry=True):
     """ Returns the lower triangular part of
     sqrt(2) sym + (1-sqrt(2)) * diag(sym),
 
@@ -17,16 +18,26 @@ def sym_to_vec(sym):
     Parameters
     ==========
     sym: array
+        shape (..., n, n)
+    isometry: bool, optional, default to True
+        used map is an isometry or not
+
+    Returns
+    =======
+    vec: array
+        shape (..., n * (n+1) /2)
     """
-    sym = np.sqrt(2) * sym
-    # the sqrt(2) factor
     p = sym.shape[-1]
-    sym.flat[::p + 1] = sym.flat[::p + 1] / np.sqrt(2)
-    mask = np.tril(np.ones(sym.shape[-2:])).astype(np.bool)
-    return sym[..., mask]
+    tril_mask = np.tril(np.ones(sym.shape[-2:])).astype(np.bool)
+    sym_copy = copy.copy(sym)
+    if isometry:
+        off_diag_mask = (np.ones((p, p)) - np.eye(p)).astype(np.bool)
+        sym_copy[..., off_diag_mask] *= np.sqrt(2)
+
+    return sym_copy[..., tril_mask]
 
 
-def vec_to_sym(vec):
+def vec_to_sym(vec, isometry=True):
     n = vec.size
     # solve p * (p + 1) / 2 = n subj. to p > 0
     # p ** 2 + p - 2n = 0 & p > 0
@@ -39,11 +50,14 @@ def vec_to_sym(vec):
                          "symmetric matrix")
 
     p = int(p)
-    mask = np.tril(np.ones((p, p))).astype(np.bool)
+    tril_mask = np.tril(np.ones((p, p))).astype(np.bool)
+    off_diag_mask = (np.ones((p, p)) - np.eye(p)).astype(np.bool)
     sym = np.zeros((p, p), dtype=np.float)
-    sym[..., mask] = vec
-    sym = (sym + sym.T) / np.sqrt(2)  # divide by 2 multiply by sqrt(2)
-    sym.flat[::p + 1] = sym.flat[::p + 1] / np.sqrt(2)
+    sym[..., tril_mask] = vec
+    sym.T[..., tril_mask] = vec
+    if isometry:
+        sym[..., off_diag_mask] /= np.sqrt(2)
+
     return sym
 
 

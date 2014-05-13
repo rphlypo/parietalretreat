@@ -139,6 +139,7 @@ def plot_adjacency(G,
     fig = plt.figure()
     if vmin is None and vmax is None:
         vmax = np.max(np.abs(G))
+        vmax += 0.1 * (vmax < 0.1)
         vmin = -vmax
     plt.imshow(G, vmin=vmin, vmax=vmax, interpolation='nearest',
                cmap=cmap)

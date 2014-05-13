@@ -5,7 +5,7 @@ import random
 import nose
 import numpy as np
 from scipy import linalg
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from nose.tools import assert_raises, assert_equal, assert_is_instance,\
     assert_true
 
@@ -16,11 +16,31 @@ import manifold as my_mfd
 
 def test_sym_to_vec():
     """Testing sym_to_vec function"""
-    shape = random.randint(1, 50)
+    sym = np.ones((3, 3))
+    vec = my_con.sym_to_vec(sym)
+    vec_expected = np.array([1., np.sqrt(2), 1., np.sqrt(2),  np.sqrt(2), 1.])
+    vec_bool = my_con.sym_to_vec(sym > 0, isometry=False)
+    bool_expected = np.ones(6, dtype=bool)
+    assert_array_almost_equal(vec, vec_expected)
+    assert_array_equal(vec_bool, bool_expected)
+
+    shape = random.randint(1, 40)
     m = np.random.rand(shape, shape)
     sym = m + m.T
+    syms = np.asarray([sym, 2. * sym, 0.5 * sym])
     vec = my_con.sym_to_vec(sym)
+    vecs = my_con.sym_to_vec(syms)
     assert_array_almost_equal(my_con.vec_to_sym(vec), sym)
+    for k, vec in enumerate(vecs):
+        assert_array_almost_equal(my_con.vec_to_sym(vec), syms[k])
+    vec = my_con.sym_to_vec(sym, isometry=False)
+    vecs = my_con.sym_to_vec(syms, isometry=False)
+    assert_array_almost_equal(my_con.vec_to_sym(vec, isometry=False), sym)
+    assert_array_almost_equal(vec[..., -shape:], sym[..., -1, :])
+    for k, vec in enumerate(vecs):
+        assert_array_almost_equal(
+        my_con.vec_to_sym(vec, isometry=False), syms[k])
+    assert_array_almost_equal(vecs[..., -shape:], syms[..., -1, :])
 
 
 def test_vec_to_sym():
@@ -37,6 +57,15 @@ def test_vec_to_sym():
     vec = np.random.rand(p)
     sym = my_con.vec_to_sym(vec)
     assert_array_almost_equal(my_con.sym_to_vec(sym), vec)
+
+    vec = np.ones(6, )
+    sym = my_con.vec_to_sym(vec)
+    sym_expected = np.array([[np.sqrt(2), 1., 1.], [1., np.sqrt(2), 1.],
+                              [1., 1., np.sqrt(2)]]) / np.sqrt(2)
+    sym_bool = my_con.vec_to_sym(vec > 0, isometry=False)
+    bool_expected = np.ones((3, 3), dtype=bool)
+    assert_array_almost_equal(sym, sym_expected)
+    assert_array_equal(sym_bool, bool_expected)
 
 
 def test_prec_to_partial():
@@ -73,6 +102,7 @@ def test_transform():  # TODO : class test for class CovEmbedding
         for k, vec in enumerate(covs_transformed):
             assert_equal(vec.size, shape * (shape + 1) / 2)
             cov_new = my_con.vec_to_sym(vec)
+            assert_true(my_mfd.is_spd(covs[k]))
             if estimators["kind"] == "tangent":
                 assert_array_almost_equal(cov_new, cov_new.T)
                 fre_sqrt = my_mfd.sqrtm(cov_embedding.mean_cov_)
