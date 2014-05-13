@@ -14,11 +14,6 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
         root_dir = ["/storage/data", "/storage/workspace/brainpedia/preproc",
                     "/storage/workspace/brainpedia/preproc",
                     "/storage/workspace/brainpedia/preproc"]
-    head, tail_ = os.path.split(os.path.normpath(root_dir))
-    counter = 0
-    while tail_:
-        head, tail_ = os.path.split(head)
-        counter += 1
 
     if hasattr(data_set, "__iter__"):
         df_ = list()
@@ -26,6 +21,12 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
             df_.append(get_all_paths(data_set=ds, root_dir=rd))
         df = pandas.concat(df_, keys=data_set)
     elif data_set.startswith("ds") or data_set == "henson2010faces":
+        head, tail_ = os.path.split(os.path.normpath(root_dir))
+        counter = 0
+        while tail_:
+            head, tail_ = os.path.split(head)
+            counter += 1
+
         base_path = os.path.join(root_dir, data_set)
         list_ = list()
         with open(os.path.join(base_path,
@@ -50,7 +51,7 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
         cnt = 0
         for fun_path in sorted(glob.glob(
             os.path.join(base_path,
-                         "sub*/BOLD/task*/bold.nii.gz"))):
+                         "sub*/model/model*/BOLD/task*/bold.nii.gz"))):
             head, tail_ = os.path.split(fun_path)
             tail = list()
             while tail_:
@@ -143,9 +144,8 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
 
 def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
-    from joblib import Memory
+    from joblib import Memory, Parallel, delayed
     import joblib
-    from sklearn.base import clone
     import nibabel
 
     mem = Memory(cachedir=os.path.join(root_dir, dump_dir))
@@ -164,8 +164,9 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
                               "HarvardOxford-cortl-prob-2mm.nii.gz"),
         mask_img=mask_img, detrend=True, smoothing_fwhm=5, standardize=True,
         low_pass=None, high_pass=None, memory=mem, verbose=10)
-    region_ts = [clone(nmm).fit_transform(niimg, n_hv_confounds=5)
-                 for niimg in list(df["func"])]
+    region_ts = Parallel(n_jobs=n_jobs)(
+        delayed(_data_fitting)(niimg, nmm, n_hv_confounds=5)
+        for niimg in list(df["func"]))
     joblib.dump(region_ts,
                 os.path.join(dump_dir, "results/"))
     region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
@@ -173,11 +174,14 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     return df
 
 
+def _data_fitting(niimg, nmm, n_hv_confounds=5):
+    from sklearn.base import clone
+    return clone(nmm).fit_transform(niimg, n_hv_confounds=n_hv_confounds)
+
+
 if __name__ == "__main__":
-    run(root_dir=["/volatile/storage/workspace/brainpedia/preproc/",
-                  "/volatile/storage/workspace/brainpedia/preproc/",
-                  "/volatile/storage/workspace/brainpedia/preproc/"],
-        data_set=["ds105", "ds107", "henson2010faces"],
+    run(root_dir="/volatile/storage/workspace/brainpedia/preproc/",
+        data_set="ds105",
         dump_dir="/volatile/storage/workspace/" +
         "parietal_retreat/covariance_learn/",
         n_jobs=20)
