@@ -3,7 +3,6 @@ import copy
 import os.path
 
 import numpy as np
-import joblib
 from pandas import DataFrame
 
 import scipy.linalg
@@ -30,10 +29,17 @@ def get_data(root_dir="/",
 
 def _load_data(root_dir="/",
                data_set="ds107",
-               dump_file="/home/storage/workspace/parietal_retreat/" +
-               "covariance_learn/dump/results.pkl"):
+               cache_dir="/home/storage/workspace/parietal_retreat/" +
+               "covariance_learn/cache/",
+               n_jobs=1):
+    from joblib import Memory
+    mem = Memory(cachedir=cache_dir)
+    load_data_ = mem.cache(setup_data_paths.run)
+
     df = setup_data_paths.get_all_paths(root_dir=root_dir, data_set=data_set)
-    region_signals = joblib.load(os.path.join(root_dir, dump_file))
+    # region_signals = joblib.load(os.path.join(root_dir, dump_file))
+    region_signals = load_data_(root_dir=root_dir, data_set=data_set,
+                                n_jobs=n_jobs)
     return df, region_signals
 
 
