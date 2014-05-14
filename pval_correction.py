@@ -63,7 +63,7 @@ def bonferroni(p):
         if N1 > 0:
             q = np.minimum(1., N1 * p)
     else:
-        q = np.array([fdr(p[j]) for j in range(p.shape[-1])])
+        q = np.array([bonferroni(p[j]) for j in range(p.shape[-1])])
 
     return q
 
@@ -90,7 +90,7 @@ def fdr(p):
         q = p
     elif p.ndim == 1:
         N1 = p.shape[0]
-        q = np.inf + np.ones(p.shape)
+        q = np.nan + np.ones(p.shape)
         idx = p.argsort()
         sorted_p = p[idx]
         N1 = np.sum(np.logical_not(np.isnan(p)))

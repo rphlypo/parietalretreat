@@ -177,7 +177,9 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
     """
     # Real, symmetry and positive definiteness check
     for mat in mats:
+        print mat.shape
         try:
+#            assert(is_spd(mat)) # TODO: replace by assert(is_spd(mat)) and test
             assert_array_almost_equal(mat, mat.T)
             assert(np.all(np.isreal(mat)))
             assert_array_less(0.0, np.linalg.eigvalsh(mat))

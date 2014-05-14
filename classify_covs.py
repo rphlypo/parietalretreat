@@ -8,7 +8,7 @@ from pandas import DataFrame
 import scipy.linalg
 import scipy.stats.mstats
 
-from connectivity import CovEmbedding
+from connectivity import CovEmbedding, vec_to_sym, sym_to_vec
 import setup_data_paths
 import confound
 
@@ -170,40 +170,66 @@ def var_stabilize(X, kind):
     return Y
 
 
-def statistical_test(estimators={'kind': 'tangent',
-                                 'cov_estimator': None},
-                     root_dir="/",
-                     p_correction="fdr",
-                     data_set="ds107"):
-    df = get_data(root_dir=root_dir, data_set=data_set)
+def statistical_test(df, conditions, estimators={'kind': 'tangent',
+                                                 'cov_estimator': None},
+                     p_correction="fdr"):
     grouped = df.groupby(["condition", "subj_id"])
-    conditions = _get_conditions(root_dir=root_dir, data_set=data_set)
     dict_list = list()
-    entries = ("comparison", "tstat", "pval")
+    entries = ("baseline", "mean signif baseline",
+               "follow up", "mean signif follow up",
+               "comparison", "tstat", "pval", "mean signif comparison")
     for (ix1_, condition1) in enumerate(conditions):
         for (ix2_, condition2) in enumerate(conditions):
             if ix1_ <= ix2_:
                 continue
             cond = list()
             grouped = df.groupby("subj_id")
+            #print df[df.columns[2]]
+            #print grouped[0]
             for _, group in grouped:
                 cond.append(group[group["condition"] == condition1]
                             ["region_signals"].iloc[0])
                 cond.append(group[group["condition"] == condition2]
                             ["region_signals"].iloc[0])
             X = CovEmbedding(**estimators).fit_transform(cond)
-            Y = X  # var_stabilize(X, estimators['kind'])
+            X = [vec_to_sym(x) for x in X]            
+            X = np.asarray(X)
+            X = sym_to_vec(X, isometry=False)
+            Y = var_stabilize(X, estimators['kind'])
+            t_stat_baseline, p_baseline = scipy.stats.ttest_1samp(Y[::2, ...],
+                                              0.0,
+                                              axis=0)
+            q_baseline = pval_correction.correct(p_baseline, correction=p_correction)
+            q_baseline[np.isnan(q_baseline)] = 0.
+            baseline_signif = np.tanh(Y[::2, ...]).mean(axis=0) * (q_baseline < 0.05)
+            t_stat_followup, p_followup = scipy.stats.ttest_1samp(Y[1::2, ...],
+                                              0.0,
+                                              axis=0)
+            q_followup = pval_correction.correct(p_followup, correction=p_correction)
+            q_followup[np.isnan(q_followup)] = 0.
+            followup_signif = np.tanh(Y[1::2, ...]).mean(axis=0) * (q_followup < 0.05)
             t_stat, p = scipy.stats.ttest_rel(Y[::2, ...],
                                               Y[1::2, ...],
                                               axis=0)
             q = pval_correction.correct(p, correction=p_correction)
+            q[np.isnan(q)] = 0.
+            comp_signif = (np.tanh(Y[1::2, ...])- np.tanh(Y[::2, ...])).mean(axis=0) * \
+                (q < 0.05) * (np.minimum(q_baseline, q_followup) < 0.05 )
             print "{} vs. {}: t_stat = {}, q-val = {}".format(
                 condition1, condition2, t_stat, q)
             dict_list.append(
                 dict(zip(*[entries,
-                           ("{} vs. {}".format(condition1, condition2),
-                            t_stat, q)])))
+                           ("{}".format(condition1),
+                            baseline_signif,
+                            "{}".format(condition2),
+                            followup_signif,
+                            "{} vs. {}".format(condition1, condition2),
+                            t_stat, q, comp_signif)])))
     return DataFrame(dict_list, columns=entries)
 
 if __name__ == "__main__":
-    t_test = statistical_test(root_dir="/home")
+    root_dir = "/home"
+    data_set = "ds107"
+    df = get_data(root_dir=root_dir, data_set=data_set)
+    conditions = _get_conditions(root_dir=root_dir, data_set=data_set)
+    t_test = statistical_test(root_dir=root_dir)
