@@ -17,19 +17,18 @@ import pval_correction
 
 def get_data(root_dir="/",
              data_set=None,
-             dump_file="/home/storage/workspace/parietal_retreat/" +
-             "covariance_learn/dump/results.pkl"):
+             **kwargs):
     if data_set is None:
         data_set = "ds107"
     df, region_signals = _load_data(root_dir=root_dir,
                                     data_set=data_set,
-                                    dump_file=dump_file)
+                                    **kwargs)
     return _get_region_signals(df, region_signals, data_set=data_set)
 
 
 def _load_data(root_dir="/",
                data_set="ds107",
-               cache_dir="/home/storage/workspace/parietal_retreat/" +
+               cache_dir="/volatile/storage/workspace/parietal_retreat/" +
                "covariance_learn/cache/",
                n_jobs=1):
     from joblib import Memory
@@ -39,7 +38,8 @@ def _load_data(root_dir="/",
     df = setup_data_paths.get_all_paths(root_dir=root_dir, data_set=data_set)
     # region_signals = joblib.load(os.path.join(root_dir, dump_file))
     region_signals = load_data_(root_dir=root_dir, data_set=data_set,
-                                n_jobs=n_jobs)
+                                n_jobs=n_jobs,
+                                dump_dir=os.path.join(cache_dir, data_set))
     return df, region_signals
 
 
@@ -174,8 +174,9 @@ def statistical_test(estimators={'kind': 'tangent',
                                  'cov_estimator': None},
                      root_dir="/",
                      p_correction="fdr",
-                     data_set="ds107"):
-    df = get_data(root_dir=root_dir, data_set=data_set)
+                     data_set="ds107",
+                     n_jobs=1):
+    df = get_data(root_dir=root_dir, data_set=data_set, n_jobs=n_jobs)
     grouped = df.groupby(["condition", "subj_id"])
     conditions = _get_conditions(root_dir=root_dir, data_set=data_set)
     dict_list = list()

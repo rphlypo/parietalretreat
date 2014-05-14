@@ -69,8 +69,7 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
                                 "anatomy",
                                 "highres{}.nii.gz".format(model[-3:]))
 
-            onsets = glob.glob(os.path.join(tmp_base, "model",
-                                            "model*", "onsets",
+            onsets = glob.glob(os.path.join(tmp_base, "onsets",
                                             "{}_{}".format(task, run),
                                             "cond*.txt"))
 
@@ -142,12 +141,14 @@ def get_all_paths(data_set="hcp", root_dir="/storage/data"):
     return df
 
 
-def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
+def run(root_dir="/", dump_dir=None, data_set=None, n_jobs=1):
     from nilearn.input_data import MultiNiftiMasker, NiftiMapsMasker
     from joblib import Memory, Parallel, delayed
-    import joblib
     import nibabel
+    from tempfile import mkdtemp
 
+    if dump_dir is None:
+        dump_dir = mkdtemp(os.path.join(root_dir, 'tmp'))
     mem = Memory(cachedir=os.path.join(root_dir, dump_dir))
     print "Loading all paths and variables into memory"
     df = get_all_paths(root_dir=root_dir, data_set=data_set)
@@ -167,11 +168,11 @@ def run(root_dir="/", dump_dir="/tmp", data_set=None, n_jobs=1):
     region_ts = Parallel(n_jobs=n_jobs)(
         delayed(_data_fitting)(niimg, nmm, n_hv_confounds=5)
         for niimg in list(df["func"]))
-    joblib.dump(region_ts,
-                os.path.join(dump_dir, "results.pkl"))
-    # region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
-    # df.join(region_signals)
-    # return df
+#   joblib.dump(region_ts,
+#               os.path.join(dump_dir, "results.pkl"))
+#   region_signals = DataFrame({"region_signals": region_ts}, index=df.index)
+#   df.join(region_signals)
+#   return df
     return region_ts
 
 
