@@ -1,0 +1,1024 @@
+
+
+
+<!DOCTYPE html>
+
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>NiLearn: Machine learning for NeuroImaging in Python &mdash; Machine learning for NeuroImaging</title>
+    
+    <link rel="stylesheet" href="../_static/nature.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    '../',
+        VERSION:     '0.1a',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true
+      };
+    </script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/copybutton.js"></script>
+    <link rel="shortcut icon" href="../_static/favicon.ico"/>
+    <link rel="top" title="Machine learning for NeuroImaging" href="../index.html" />
+<meta content="True" name="HandheldFriendly">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0;">
+<meta name="keywords" content="nilearn, neuroimaging, python, neuroscience, machinelearning">
+<script type="text/javascript">
+$(function () {
+    // Lock the table of content to a fixed position once we scroll enough
+    var top = 105 + $('.sphinxsidebarwrapper').offset().top - parseFloat($('.sphinxsidebarwrapper').css('margin-top').replace(/auto/, 0)),
+        sections = {},
+        i        = 0,
+	url	 = document.URL.replace(/#.*$/, ""),
+	current_section = 0;
+
+    // Grab positions of our sections 
+    $('.headerlink').each(function(){
+        sections[this.href.replace(url, '')] = $(this).offset().top - 50;
+    });
+
+    $(window).scroll(function(event) {
+	var pos   = $(window).scrollTop();
+	// Lock the table of content to a fixed position once we scroll enough
+	if(pos > top){
+	    //begin to scroll
+	    $('.sphinxsidebarwrapper').css("position", "fixed");
+	    $('.sphinxsidebarwrapper').css("top", -105);
+	}
+	else{
+	    //lock it back into place
+	    $('.sphinxsidebarwrapper').css("position", "relative");
+	    $('.sphinxsidebarwrapper').css("top",0);
+	}
+            
+	// Highlight the current section
+	$('a.internal').removeClass('active');
+        for(i in sections){
+            if(sections[i] > pos){
+		break;
+            };
+	    if($('a.internal[href$="' + i + '"]').is(':visible')){
+		current_section = i;
+	    };
+        }
+	$('a.internal[href$="' + current_section + '"]').addClass('active');
+    });
+
+});
+</script>
+
+
+<script type="text/javascript">
+
+        var _gaq = _gaq || [];
+        _gaq.push(['_setAccount', 'UA-41920728-1']);
+        _gaq.push(['_trackPageview']);
+
+        (function() {
+            var ga = document.createElement('script'); ga.type = 'text/javascript'; ga.async = true;
+            ga.src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+            var s = document.getElementsByTagName('script')[0]; s.parentNode.insertBefore(ga, s);
+        })();
+    </script>
+
+  </head>
+  <body>
+<div id="logo-banner">
+  <div class="logo">
+    <a href="../index.html">
+      <img src="../_static/nilearn-logo.png" alt="NiLearn logo"  border="0" />
+    </a>
+  </div>
+  <!-- A tag cloud to make it easy for people to find what they are
+                         looking for -->
+ <div class="tags">
+  <ul>
+    <li>
+      <big><a href="plot_haxby_anova_svm.html">SVM</a></big>
+    </li>
+    <li>
+      <small><a href="../data_analysis/parcellating.html">Ward
+          clustering</a></small>
+    </li>
+    <li>
+      <a href="../building_blocks/haxby_searchlight.html">Searchlight</a>
+    </li>
+    <li>
+      <big><a href="../data_analysis/resting_state_networks.html">ICA</a></big>
+    </li>
+    <li>
+      <a href="../building_blocks/data_preparation.html">Nifti IO</a>
+    </li>
+    <li>
+      <a href="../modules/reference.html#module-nilearn.datasets">Datasets</a>
+    </li>
+  </ul>
+ </div>
+
+  <div class="banner">
+    <h1>NiLearn:</h1>
+    <h2>Machine learning for Neuro-Imaging in Python</h2>
+  </div>
+  <div class="search_form">
+    <div id="cse" style="width: 100%;"></div>
+    <script src="http://www.google.com/jsapi" type="text/javascript"></script>
+    <script type="text/javascript">
+      google.load('search', '1', {language : 'en'});
+      google.setOnLoadCallback(function() {
+      var customSearchControl = new google.search.CustomSearchControl('014136483057745874622:r-npolb1uki');
+      customSearchControl.setResultSetSize(google.search.Search.FILTERED_CSE_RESULTSET);
+      var options = new google.search.DrawOptions();
+      options.setAutoComplete(true);
+      customSearchControl.draw('cse', options);
+      }, true);
+    </script>
+  </div>
+</div>
+
+
+
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a></li>
+<li><a href="../index.html">NiLearn Home</a> |&nbsp;</li>
+<li><a href="../user_guide.html">User Guide</a> |&nbsp;</li>
+<li><a href="index.html">Examples</a> |&nbsp;</li>
+<li><a href="../modules/reference.html">Reference</a> |&nbsp;</li>
+<li id="navbar-about"><a href="../AUTHORS.html">About</a>|&nbsp;</li>
+<li id="navbar-ecosystem"><a href="http://www.nipy.org/">Nipy ecosystem</a></li>
+ 
+      </ul>
+    </div>
+      <div class="sphinxsidebar">
+        <div class="sphinxsidebarwrapper">
+
+
+<h4> Giving credit </h4>
+  <ul class="simple">
+    <li><p>Please consider <a href="../AUTHORS.html#citing">citing the
+                    scikit-learn</a> if you use it.</p></li>
+  </ul>
+
+
+<div class="navbar">
+</div> <!-- end navbar -->
+
+<script type="text/javascript">$('#searchbox-ml').show(0);</script>
+<script type="text/javascript">$('#searchbox-site').show(0);</script>
+
+
+        </div>
+      </div>
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body">
+            
+  <div class="section" id="measuring-connectivity-in-tangent-space-of-symmetric-positive-definite-matrices">
+<span id="example-plot-adhd-tangent-py"></span><h1>Measuring connectivity in tangent space of symmetric positive definite matrices<a class="headerlink" href="#measuring-connectivity-in-tangent-space-of-symmetric-positive-definite-matrices" title="Permalink to this headline">¶</a></h1>
+<p>This example shows how to extract signals from regions defined by an atlas,
+and to estimate different connectivity measures based on these signals.</p>
+<ul class="horizontal">
+<li><a class="first reference internal image-reference" href="../_images/plot_adhd_tangent_1.png"><img alt="../_images/plot_adhd_tangent_1.png" src="../_images/plot_adhd_tangent_1.png" style="width: 376.0px; height: 282.0px;" /></a>
+</li>
+<li><a class="first reference internal image-reference" href="../_images/plot_adhd_tangent_2.png"><img alt="../_images/plot_adhd_tangent_2.png" src="../_images/plot_adhd_tangent_2.png" style="width: 376.0px; height: 282.0px;" /></a>
+</li>
+<li><a class="first reference internal image-reference" href="../_images/plot_adhd_tangent_3.png"><img alt="../_images/plot_adhd_tangent_3.png" src="../_images/plot_adhd_tangent_3.png" style="width: 376.0px; height: 376.0px;" /></a>
+</li>
+<li><a class="first reference internal image-reference" href="../_images/plot_adhd_tangent_4.png"><img alt="../_images/plot_adhd_tangent_4.png" src="../_images/plot_adhd_tangent_4.png" style="width: 376.0px; height: 282.0px;" /></a>
+</li>
+<li><a class="first reference internal image-reference" href="../_images/plot_adhd_tangent_5.png"><img alt="../_images/plot_adhd_tangent_5.png" src="../_images/plot_adhd_tangent_5.png" style="width: 376.0px; height: 376.0px;" /></a>
+</li>
+</ul>
+<p><strong>Script output</strong>:</p>
+<div class="max-height highlight-python"><pre>  -- Fetching datasets ...
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3902469/3902469_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3902469/3902469_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/7774305/7774305_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/7774305/7774305_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3699991/3699991_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3699991/3699991_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2014113/2014113_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2014113/2014113_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4275075/4275075_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4275075/4275075_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1019436/1019436_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1019436/1019436_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3154996/3154996_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3154996/3154996_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3884955/3884955_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3884955/3884955_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027034/0027034_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027034/0027034_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4134561/4134561_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4134561/4134561_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027018/0027018_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027018/0027018_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 32767.8766  , ...,  38313.911023],
+       ...,
+       [ 32781.805244, ...,  38400.364075]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.059023, ..., -0.005245],
+       ...,
+       [ 0.009388, ..., -0.008995]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027018/0027018_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(260, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/6115230/6115230_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/6115230/6115230_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 31042.538445, ...,  36177.854964],
+       ...,
+       [ 31101.619434, ...,  36401.527881]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.069479, ...,  0.021859],
+       ...,
+       [-0.074985, ...,  0.010937]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/6115230/6115230_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(261, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027037/0027037_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027037/0027037_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 27194.758277, ...,  38827.80487 ],
+       ...,
+       [ 27211.381766, ...,  38846.37117 ]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.013778, ...,  0.094247],
+       ...,
+       [ 0.052702, ..., -0.020981]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027037/0027037_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(261, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/8409791/8409791_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/8409791/8409791_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 33578.223201, ...,  35000.085493],
+       ...,
+       [ 33915.721252, ...,  35294.7444  ]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.052636, ..., -0.035516],
+       ...,
+       [-0.055887, ..., -0.119219]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/8409791/8409791_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(261, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027011/0027011_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027011/0027011_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 30645.626107, ...,  37910.704612],
+       ...,
+       [ 30983.57414 , ...,  37892.309683]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.02058 , ...,  0.009602],
+       ...,
+       [ 0.074029, ..., -0.046709]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0027011/0027011_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(261, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3007585/3007585_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3007585/3007585_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 29820.577311, ...,  34236.884625],
+       ...,
+       [ 30307.949822, ...,  34477.425303]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.054207, ..., -0.050343],
+       ...,
+       [ 0.07726 , ...,  0.013527]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3007585/3007585_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(261, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/8697774/8697774_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/8697774/8697774_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 28289.435657, ...,  32762.689287],
+       ...,
+       [ 28908.469442, ...,  33242.32674 ]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.045186, ...,  0.059542],
+       ...,
+       [-0.034417, ...,  0.064255]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/8697774/8697774_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/9750701/9750701_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/9750701/9750701_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 31374.728263, ...,  30441.873838],
+       ...,
+       [ 31551.366024, ...,  30788.401629]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.138982, ...,  0.020742],
+       ...,
+       [-0.106673, ..., -0.033963]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/9750701/9750701_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010064/0010064_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010064/0010064_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 30494.104107, ...,  32005.984917],
+       ...,
+       [ 31309.807979, ...,  32612.900404]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.129865, ..., -0.043024],
+       ...,
+       [-0.03078 , ..., -0.122373]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010064/0010064_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0021019/0021019_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0021019/0021019_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 27784.718669, ...,  31286.384292],
+       ...,
+       [ 28480.79757 , ...,  31782.364731]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.038218, ..., -0.021777],
+       ...,
+       [-0.063512, ...,  0.081868]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0021019/0021019_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(175, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010042/0010042_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010042/0010042_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 25979.395181, ...,  24307.876865],
+       ...,
+       [ 26221.244879, ...,  24081.143748]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.018014, ..., -0.103569],
+       ...,
+       [ 0.001785, ...,  0.031497]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010042/0010042_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010128/0010128_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010128/0010128_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 29531.318236, ...,  29104.300546],
+       ...,
+       [ 29807.615193, ...,  29207.365732]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.017256, ...,  0.040763],
+       ...,
+       [ 0.024104, ...,  0.018105]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0010128/0010128_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2497695/2497695_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2497695/2497695_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 27034.333788, ...,  29546.380237],
+       ...,
+       [ 27718.224134, ...,  29858.550642]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.057721, ..., -0.035356],
+       ...,
+       [ 0.066367, ...,  0.026466]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2497695/2497695_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4164316/4164316_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4164316/4164316_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 33657.826296, ...,  34299.872359],
+       ...,
+       [ 34248.016058, ...,  34750.038921]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.021044, ..., -0.046902],
+       ...,
+       [ 0.076711, ...,  0.107941]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4164316/4164316_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(176, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1552181/1552181_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1552181/1552181_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 28417.043403, ...,  38102.668727],
+       ...,
+       [ 28568.129179, ...,  38200.302118]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.006047, ..., -0.033804],
+       ...,
+       [ 0.037682, ...,  0.074804]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1552181/1552181_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(78, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4046678/4046678_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4046678/4046678_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 30320.483508, ...,  44170.804171],
+       ...,
+       [ 30556.51815 , ...,  44108.779459]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.044415, ..., -0.193144],
+       ...,
+       [ 0.069675, ...,  0.111304]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4046678/4046678_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(78, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0023012/0023012_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0023012/0023012_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 29536.93218 , ...,  40565.609417],
+       ...,
+       [ 29489.043302, ...,  40549.986462]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.073733, ..., -0.227118],
+       ...,
+       [-0.007036, ..., -0.155488]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0023012/0023012_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(77, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1679142/1679142_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1679142/1679142_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 29242.66701 , ...,  40096.135916],
+       ...,
+       [ 29212.362906, ...,  40182.437726]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.024279, ..., -0.147111],
+       ...,
+       [-0.053587, ..., -0.076898]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1679142/1679142_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(78, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1206380/1206380_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1206380/1206380_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 29418.173575, ...,  40010.842083],
+       ...,
+       [ 29441.909518, ...,  40400.905972]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.061523, ...,  0.153791],
+       ...,
+       [ 0.016093, ..., -0.010283]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1206380/1206380_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(78, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0023008/0023008_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0023008/0023008_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 30018.71916 , ...,  38593.887101],
+       ...,
+       [ 30017.878155, ...,  38517.040099]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.010191, ..., -0.086233],
+       ...,
+       [ 0.03743 , ...,  0.0584  ]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/0023008/0023008_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(77, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4016887/4016887_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4016887/4016887_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 24974.251914, ...,  37804.794241],
+       ...,
+       [ 25161.49408 , ...,  38134.383118]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.003767, ...,  0.06608 ],
+       ...,
+       [-0.043366, ...,  0.000293]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/4016887/4016887_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(78, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1418396/1418396_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1418396/1418396_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 28699.636816, ...,  40306.823678],
+       ...,
+       [ 28551.894405, ...,  40330.978186]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.001994, ..., -0.178526],
+       ...,
+       [ 0.078055, ..., -0.031271]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1418396/1418396_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(78, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2950754/2950754_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2950754/2950754_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 32152.402925, ...,  42490.075995],
+       ...,
+       [ 32956.882109, ...,  43276.607482]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.112927, ...,  0.02126 ],
+       ...,
+       [-0.003821, ...,  0.106356]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/2950754/2950754_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(236, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3994098/3994098_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3994098/3994098_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 33559.505649, ...,  39093.463723],
+       ...,
+       [ 33795.176253, ...,  39772.003321]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.018648, ..., -0.058628],
+       ...,
+       [ 0.006893, ...,  0.017409]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3994098/3994098_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(236, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3520880/3520880_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3520880/3520880_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 31570.081187, ...,  39837.442024],
+       ...,
+       [ 32049.513962, ...,  40446.576003]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.041951, ...,  0.006752],
+       ...,
+       [ 0.019795, ...,  0.001637]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3520880/3520880_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(235, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1517058/1517058_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1517058/1517058_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 32866.424742, ...,  43706.718215],
+       ...,
+       [ 32927.132894, ...,  44398.688336]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.039807, ...,  0.006609],
+       ...,
+       [ 0.043071, ...,  0.033685]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1517058/1517058_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(235, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/9744150/9744150_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/9744150/9744150_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 29646.479707, ...,  38189.798289],
+       ...,
+       [ 30438.802395, ...,  38562.975484]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.03021 , ...,  0.039228],
+       ...,
+       [-0.023515, ...,  0.00879 ]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/9744150/9744150_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(235, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1562298/1562298_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1562298/1562298_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 31873.872002, ...,  39261.294434],
+       ...,
+       [ 32953.224057, ...,  40307.613065]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.015299, ..., -0.016003],
+       ...,
+       [-0.031784, ...,  0.050834]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/1562298/1562298_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(236, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3205761/3205761_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3205761/3205761_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 30360.554594, ...,  39911.184208],
+       ...,
+       [ 31022.212609, ...,  40742.381833]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[ 0.022629, ..., -0.086668],
+       ...,
+       [ 0.019265, ...,  0.031533]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3205761/3205761_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(236, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+Processing file /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3624598/3624598_rest_tshift_RPI_voreg_mni.nii.gz
+-- Computing confounds ...
+-- Computing region signals ...
+[NiftiMapsMasker.fit_transform] loading regions from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/msdl_atlas/MSDL_rois/msdl_rois.nii
+[NiftiMapsMasker.fit_transform] loading images from /home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3624598/3624598_rest_tshift_RPI_voreg_mni.nii.gz
+[NiftiMapsMasker.fit_transform] resampling images to fit maps
+[NiftiMapsMasker.fit_transform] extracting region signals
+[NiftiMapsMasker.fit_transform] cleaning extracted signals
+________________________________________________________________________________
+[Memory] Calling nilearn.signal.clean...
+clean(array([[ 25998.663961, ...,  35486.579364],
+       ...,
+       [ 26018.481747, ...,  35837.437599]]), standardize=True, n_hv_confounds=None, detrend=True, confounds=[array([[-0.015579, ..., -0.037585],
+       ...,
+       [-0.038719, ..., -0.073536]], dtype=float32),
+'/home/sb238920/CODE/Parietal/nilearn/nilearn_data/adhd/data/3624598/3624598_regressors.csv'], low_pass=None, t_r=2.5, high_pass=0.01)
+(236, 22)
+____________________________________________________________clean - 0.0s, 0.0min
+-- Measuring connecivity by covariance ...
+-- Measuring connecivity by correlation ...
+-- Measuring connecivity by partial correlation ...
+-- Measuring connecivity in tangent space...
+-- Displaying results</pre>
+</div>
+<p><strong>Python source code:</strong> <a class="reference download internal" href="../_downloads/plot_adhd_tangent.py"><tt class="xref download docutils literal"><span class="pre">plot_adhd_tangent.py</span></tt></a></p>
+<div class="highlight-python"><div class="highlight"><pre><span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+<span class="kn">import</span> <span class="nn">matplotlib</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">np</span>
+
+<span class="c"># Copied from matplotlib 1.2.0 for matplotlib 0.99 compatibility.</span>
+<span class="n">_bwr_data</span> <span class="o">=</span> <span class="p">((</span><span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">,</span> <span class="mf">1.0</span><span class="p">),</span> <span class="p">(</span><span class="mf">1.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">,</span> <span class="mf">0.0</span><span class="p">))</span>
+<a href="http://matplotlib.org/api/cm_api.html#matplotlib.cm.register_cmap"><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">register_cmap</span></a><span class="p">(</span><span class="n">cmap</span><span class="o">=</span><span class="n">matplotlib</span><span class="o">.</span><span class="n">colors</span><span class="o">.</span><span class="n">LinearSegmentedColormap</span><span class="o">.</span><span class="n">from_list</span><span class="p">(</span>
+    <span class="s">&quot;bwr&quot;</span><span class="p">,</span> <span class="n">_bwr_data</span><span class="p">))</span>
+
+
+<span class="k">def</span> <span class="nf">plot_matrix</span><span class="p">(</span><span class="n">mean_conn</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plot connectivity matrix, for a given measure. &quot;&quot;&quot;</span>
+
+    <span class="n">mean_conn</span> <span class="o">=</span> <span class="n">mean_conn</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>  <span class="c"># avoid side effects</span>
+
+    <span class="c"># Compute maximum value</span>
+    <span class="n">vmax</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">mean_conn</span><span class="p">)</span><span class="o">.</span><span class="n">max</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">vmax</span> <span class="o">&lt;=</span> <span class="mf">2e-16</span><span class="p">:</span>
+        <span class="n">vmax</span> <span class="o">=</span> <span class="mf">0.1</span>
+
+    <span class="c"># Display connectivity matrix</span>
+    <a href="http://matplotlib.org/api/figure_api.html#matplotlib.figure"><span class="n">plt</span><span class="o">.</span><span class="n">figure</span></a><span class="p">()</span>
+    <a href="http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.imshow"><span class="n">plt</span><span class="o">.</span><span class="n">imshow</span></a><span class="p">(</span><span class="n">mean_conn</span><span class="p">,</span> <span class="n">interpolation</span><span class="o">=</span><span class="s">&quot;nearest&quot;</span><span class="p">,</span>
+              <span class="n">vmin</span><span class="o">=-</span><span class="n">vmax</span><span class="p">,</span> <span class="n">vmax</span><span class="o">=</span><span class="n">vmax</span><span class="p">,</span> <span class="n">cmap</span><span class="o">=</span><a href="http://matplotlib.org/api/cm_api.html#matplotlib.cm.get_cmap"><span class="n">plt</span><span class="o">.</span><span class="n">cm</span><span class="o">.</span><span class="n">get_cmap</span></a><span class="p">(</span><span class="s">&quot;bwr&quot;</span><span class="p">))</span>
+    <a href="http://matplotlib.org/api/colorbar_api.html#matplotlib.colorbar"><span class="n">plt</span><span class="o">.</span><span class="n">colorbar</span></a><span class="p">()</span>
+    <a href="http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.title"><span class="n">plt</span><span class="o">.</span><span class="n">title</span></a><span class="p">(</span><span class="s">&quot;</span><span class="si">%s</span><span class="s"> &quot;</span> <span class="o">%</span> <span class="n">title</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">scatterplot_matrix</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">coefs_ref</span><span class="p">,</span> <span class="n">n_subjects</span><span class="p">,</span> <span class="n">names</span><span class="p">,</span>
+                       <span class="n">title</span><span class="o">=</span><span class="s">&#39;measure&#39;</span><span class="p">,</span> <span class="n">title_ref</span><span class="o">=</span><span class="s">&#39;reference measure&#39;</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Plots a scatterplot matrix of subplots. Each connectivity coefficient is</span>
+<span class="sd">    scatter plotted for a given measure against a reference measure.&quot;&quot;&quot;</span>
+    <span class="n">coefs</span> <span class="o">=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">coefs</span> <span class="o">=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_subjects</span><span class="p">)</span>
+    <span class="n">coefs_ref</span> <span class="o">=</span> <span class="n">coefs_ref</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">coefs_ref</span> <span class="o">=</span> <span class="n">coefs_ref</span><span class="o">.</span><span class="n">reshape</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">n_subjects</span><span class="p">)</span>
+    <span class="n">n_coefs</span><span class="p">,</span> <span class="n">_</span> <span class="o">=</span> <span class="n">coefs</span><span class="o">.</span><span class="n">shape</span>
+    <span class="n">fig</span><span class="p">,</span> <span class="n">axes</span> <span class="o">=</span> <a href="http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.subplots"><span class="n">plt</span><span class="o">.</span><span class="n">subplots</span></a><span class="p">(</span><span class="n">nrows</span><span class="o">=</span><span class="n">n_coefs</span><span class="p">,</span> <span class="n">ncols</span><span class="o">=</span><span class="n">n_coefs</span><span class="p">,</span> <span class="n">figsize</span><span class="o">=</span><span class="p">(</span><span class="mi">8</span><span class="p">,</span> <span class="mi">8</span><span class="p">))</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">subplots_adjust</span><span class="p">(</span><span class="n">hspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">,</span> <span class="n">wspace</span><span class="o">=</span><span class="mf">0.05</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">ax</span> <span class="ow">in</span> <span class="n">axes</span><span class="o">.</span><span class="n">flat</span><span class="p">:</span>
+        <span class="c"># Hide all ticks and labels</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">False</span><span class="p">)</span>
+
+        <span class="c"># Set up ticks only on one side for the &quot;edge&quot; subplots...</span>
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">is_first_col</span><span class="p">():</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s">&#39;left&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">is_last_col</span><span class="p">():</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s">&#39;right&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">is_first_row</span><span class="p">():</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s">&#39;top&#39;</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">ax</span><span class="o">.</span><span class="n">is_last_row</span><span class="p">():</span>
+            <span class="n">ax</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_ticks_position</span><span class="p">(</span><span class="s">&#39;bottom&#39;</span><span class="p">)</span>
+
+    <span class="c"># Plot the coefs.</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="o">*</span><a href="http://docs.scipy.org/doc/numpy-1.6.0/reference/generated/numpy.triu_indices_from.html#numpy.triu_indices_from"><span class="n">np</span><span class="o">.</span><span class="n">triu_indices_from</span></a><span class="p">(</span><span class="n">axes</span><span class="p">,</span> <span class="n">k</span><span class="o">=</span><span class="mi">1</span><span class="p">)):</span>
+        <span class="k">for</span> <span class="n">x</span><span class="p">,</span> <span class="n">y</span> <span class="ow">in</span> <span class="p">[(</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">),</span> <span class="p">(</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">)]:</span>
+            <span class="n">p1</span><span class="p">,</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coefs</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">coefs</span><span class="p">[</span><span class="n">y</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span>
+                                  <span class="n">marker</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;red&#39;</span><span class="p">,</span> <span class="n">mfc</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+            <span class="n">p2</span><span class="p">,</span> <span class="o">=</span> <span class="n">axes</span><span class="p">[</span><span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">]</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">coefs_ref</span><span class="p">[</span><span class="n">x</span><span class="p">],</span> <span class="n">coefs_ref</span><span class="p">[</span><span class="n">y</span><span class="p">],</span> <span class="n">linestyle</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">,</span>
+                                  <span class="n">marker</span><span class="o">=</span><span class="s">&#39;x&#39;</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;blue&#39;</span><span class="p">,</span> <span class="n">mfc</span><span class="o">=</span><span class="s">&#39;none&#39;</span><span class="p">)</span>
+            <a href="http://matplotlib.org/api/legend_api.html#matplotlib.legend"><span class="n">plt</span><span class="o">.</span><span class="n">legend</span></a><span class="p">([</span><span class="n">p1</span><span class="p">,</span> <span class="n">p2</span><span class="p">],</span> <span class="p">[</span><span class="n">title</span><span class="p">,</span> <span class="n">title_ref</span><span class="p">])</span>
+
+    <span class="c"># Label the diagonal subplots...</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">label</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">names</span><span class="p">):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">annotate</span><span class="p">(</span><span class="n">label</span><span class="p">,</span> <span class="p">(</span><span class="mf">0.5</span><span class="p">,</span> <span class="mf">0.5</span><span class="p">),</span> <span class="n">xycoords</span><span class="o">=</span><span class="s">&#39;axes fraction&#39;</span><span class="p">,</span>
+                <span class="n">ha</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">,</span> <span class="n">va</span><span class="o">=</span><span class="s">&#39;center&#39;</span><span class="p">)</span>
+
+    <span class="c"># Turn on the proper x or y axes ticks.</span>
+    <span class="kn">import</span> <span class="nn">itertools</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">j</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="n">n_coefs</span><span class="p">),</span> <span class="n">itertools</span><span class="o">.</span><span class="n">cycle</span><span class="p">((</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">))):</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">j</span><span class="p">,</span> <span class="n">i</span><span class="p">]</span><span class="o">.</span><span class="n">xaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+        <span class="n">axes</span><span class="p">[</span><span class="n">i</span><span class="p">,</span> <span class="n">j</span><span class="p">]</span><span class="o">.</span><span class="n">yaxis</span><span class="o">.</span><span class="n">set_visible</span><span class="p">(</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">fig</span><span class="o">.</span><span class="n">suptitle</span><span class="p">(</span><span class="n">title</span> <span class="o">+</span> <span class="s">&#39; vs &#39;</span> <span class="o">+</span> <span class="n">title_ref</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">plot_scatter</span><span class="p">(</span><span class="n">conns</span><span class="p">,</span> <span class="n">pairs</span><span class="p">,</span> <span class="n">title</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Scatter plots of connectivity coefficients for pairs of regions. &quot;&quot;&quot;</span>
+
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Fetching datasets ...&quot;</span><span class="p">)</span>
+<span class="kn">import</span> <span class="nn">nilearn.datasets</span>
+
+<span class="n">atlas</span> <span class="o">=</span> <a href="../modules/generated/nilearn.datasets.fetch_msdl_atlas.html#nilearn.datasets.fetch_msdl_atlas"><span class="n">nilearn</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">fetch_msdl_atlas</span></a><span class="p">()</span>
+<span class="n">dataset</span> <span class="o">=</span> <a href="../modules/generated/nilearn.datasets.fetch_adhd.html#nilearn.datasets.fetch_adhd"><span class="n">nilearn</span><span class="o">.</span><span class="n">datasets</span><span class="o">.</span><span class="n">fetch_adhd</span></a><span class="p">()</span>
+
+<span class="kn">import</span> <span class="nn">nilearn.image</span>
+<span class="kn">import</span> <span class="nn">nilearn.input_data</span>
+
+<span class="kn">import</span> <span class="nn">joblib</span>
+<span class="n">mem</span> <span class="o">=</span> <span class="n">joblib</span><span class="o">.</span><span class="n">Memory</span><span class="p">(</span><span class="s">&quot;.&quot;</span><span class="p">)</span>
+
+<span class="c"># Number of subjects to consider for connectivity computations</span>
+<span class="n">n_subjects</span> <span class="o">=</span> <span class="mi">40</span>
+<span class="n">subjects</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">subject_n</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">n_subjects</span><span class="p">):</span>
+    <span class="n">filename</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&quot;func&quot;</span><span class="p">][</span><span class="n">subject_n</span><span class="p">]</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Processing file </span><span class="si">%s</span><span class="s">&quot;</span> <span class="o">%</span> <span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Computing confounds ...&quot;</span><span class="p">)</span>
+    <span class="n">confound_file</span> <span class="o">=</span> <span class="n">dataset</span><span class="p">[</span><span class="s">&quot;confounds&quot;</span><span class="p">][</span><span class="n">subject_n</span><span class="p">]</span>
+    <span class="n">hv_confounds</span> <span class="o">=</span> <span class="n">mem</span><span class="o">.</span><span class="n">cache</span><span class="p">(</span><span class="n">nilearn</span><span class="o">.</span><span class="n">image</span><span class="o">.</span><span class="n">high_variance_confounds</span><span class="p">)(</span><span class="n">filename</span><span class="p">)</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Computing region signals ...&quot;</span><span class="p">)</span>
+    <a href="../modules/generated/nilearn.input_data.NiftiMapsMasker.html#nilearn.input_data.NiftiMapsMasker"><span class="n">masker</span></a> <span class="o">=</span> <a href="../modules/generated/nilearn.input_data.NiftiMapsMasker.html#nilearn.input_data.NiftiMapsMasker"><span class="n">nilearn</span><span class="o">.</span><span class="n">input_data</span><span class="o">.</span><span class="n">NiftiMapsMasker</span></a><span class="p">(</span>
+        <span class="n">atlas</span><span class="p">[</span><span class="s">&quot;maps&quot;</span><span class="p">],</span> <span class="n">resampling_target</span><span class="o">=</span><span class="s">&quot;maps&quot;</span><span class="p">,</span> <span class="n">detrend</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">low_pass</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">high_pass</span><span class="o">=</span><span class="mf">0.01</span><span class="p">,</span> <span class="n">t_r</span><span class="o">=</span><span class="mf">2.5</span><span class="p">,</span> <span class="n">standardize</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+        <span class="n">memory</span><span class="o">=</span><span class="n">mem</span><span class="p">,</span> <span class="n">memory_level</span><span class="o">=</span><span class="mi">1</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+    <span class="n">region_ts</span> <span class="o">=</span> <a href="../modules/generated/nilearn.input_data.NiftiMapsMasker.html#nilearn.input_data.NiftiMapsMasker"><span class="n">masker</span></a><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">filename</span><span class="p">,</span>
+                                     <span class="n">confounds</span><span class="o">=</span><span class="p">[</span><span class="n">hv_confounds</span><span class="p">,</span> <span class="n">confound_file</span><span class="p">])</span>
+    <span class="n">subjects</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">region_ts</span><span class="p">)</span>
+
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Measuring connecivity by covariance ...&quot;</span><span class="p">)</span>
+<span class="kn">from</span> <span class="nn">nilearn.connectivity_tmp</span> <span class="kn">import</span> <span class="n">CovEmbedding</span><span class="p">,</span> <span class="n">vec_to_sym</span>
+
+<span class="n">estimator</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">,</span> <span class="s">&#39;cov_estimator&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="n">cov_embedding</span> <span class="o">=</span> <span class="n">CovEmbedding</span><span class="p">(</span><span class="o">**</span><span class="n">estimator</span><span class="p">)</span>
+<span class="n">covariances</span> <span class="o">=</span> <span class="n">vec_to_sym</span><span class="p">(</span><span class="n">cov_embedding</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">subjects</span><span class="p">))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Measuring connecivity by correlation ...&quot;</span><span class="p">)</span>
+<span class="n">estimator</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;correlation&#39;</span><span class="p">,</span> <span class="s">&#39;cov_estimator&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="n">cov_embedding</span> <span class="o">=</span> <span class="n">CovEmbedding</span><span class="p">(</span><span class="o">**</span><span class="n">estimator</span><span class="p">)</span>
+<span class="n">correlations</span> <span class="o">=</span> <span class="n">vec_to_sym</span><span class="p">(</span><span class="n">cov_embedding</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">subjects</span><span class="p">))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Measuring connecivity by partial correlation ...&quot;</span><span class="p">)</span>
+<span class="n">estimator</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;partial correlation&#39;</span><span class="p">,</span> <span class="s">&#39;cov_estimator&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="n">cov_embedding</span> <span class="o">=</span> <span class="n">CovEmbedding</span><span class="p">(</span><span class="o">**</span><span class="n">estimator</span><span class="p">)</span>
+<span class="n">partial_correlations</span> <span class="o">=</span> <span class="n">vec_to_sym</span><span class="p">(</span><span class="n">cov_embedding</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">subjects</span><span class="p">))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Measuring connecivity in tangent space...&quot;</span><span class="p">)</span>
+<span class="n">estimator</span> <span class="o">=</span> <span class="p">{</span><span class="s">&#39;kind&#39;</span><span class="p">:</span> <span class="s">&#39;tangent&#39;</span><span class="p">,</span> <span class="s">&#39;cov_estimator&#39;</span><span class="p">:</span> <span class="bp">None</span><span class="p">}</span>
+<span class="n">cov_embedding</span> <span class="o">=</span> <span class="n">CovEmbedding</span><span class="p">(</span><span class="o">**</span><span class="n">estimator</span><span class="p">)</span>
+<span class="n">tangents</span> <span class="o">=</span> <span class="n">vec_to_sym</span><span class="p">(</span><span class="n">cov_embedding</span><span class="o">.</span><span class="n">fit_transform</span><span class="p">(</span><span class="n">subjects</span><span class="p">))</span>
+
+<span class="k">print</span><span class="p">(</span><span class="s">&quot;-- Displaying results&quot;</span><span class="p">)</span>
+<span class="n">plot_matrix</span><span class="p">(</span><span class="n">covariances</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span> <span class="s">&quot;covariances arithmetic mean&quot;</span><span class="p">)</span>
+<span class="n">coefs_ref</span> <span class="o">=</span> <span class="n">covariances</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+
+<span class="n">plot_matrix</span><span class="p">(</span><span class="n">partial_correlations</span><span class="o">.</span><span class="n">mean</span><span class="p">(</span><span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">),</span>
+            <span class="s">&quot;partial correlations mean&quot;</span><span class="p">)</span>
+<span class="n">coefs</span> <span class="o">=</span> <span class="n">partial_correlations</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+<span class="n">scatterplot_matrix</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">coefs_ref</span><span class="p">,</span> <span class="n">n_subjects</span><span class="p">,</span>
+                   <span class="p">[</span><span class="s">&#39;L DMN&#39;</span><span class="p">,</span> <span class="s">&#39;med DMN&#39;</span><span class="p">,</span> <span class="s">&#39;front DMN&#39;</span><span class="p">,</span> <span class="s">&#39;R DMN&#39;</span><span class="p">],</span>
+                   <span class="n">title</span><span class="o">=</span><span class="s">&quot;partial correlation&quot;</span><span class="p">,</span> <span class="n">title_ref</span><span class="o">=</span><span class="s">&#39;covariance&#39;</span><span class="p">)</span>
+
+<span class="n">plot_matrix</span><span class="p">(</span><span class="n">cov_embedding</span><span class="o">.</span><span class="n">mean_cov_</span><span class="p">,</span> <span class="s">&quot;covariances geometric mean&quot;</span><span class="p">)</span>
+<span class="n">coefs</span> <span class="o">=</span> <span class="n">tangents</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">:</span><span class="mi">5</span><span class="p">,</span> <span class="mi">5</span><span class="p">:</span><span class="mi">7</span><span class="p">]</span>
+<span class="n">scatterplot_matrix</span><span class="p">(</span><span class="n">coefs</span><span class="p">,</span> <span class="n">coefs_ref</span><span class="p">,</span> <span class="n">n_subjects</span><span class="p">,</span>
+                   <span class="p">[</span><span class="s">&#39;L DMN&#39;</span><span class="p">,</span> <span class="s">&#39;med DMN&#39;</span><span class="p">,</span> <span class="s">&#39;front DMN&#39;</span><span class="p">,</span> <span class="s">&#39;R DMN&#39;</span><span class="p">],</span>
+                   <span class="n">title</span><span class="o">=</span><span class="s">&quot;tangent&quot;</span><span class="p">,</span> <span class="n">title_ref</span><span class="o">=</span><span class="s">&#39;covariance&#39;</span><span class="p">)</span>
+<a href="http://matplotlib.org/api/pyplot_api.html#matplotlib.pyplot.show"><span class="n">plt</span><span class="o">.</span><span class="n">show</span></a><span class="p">()</span>
+</pre></div>
+</div>
+<p><strong>Total running time of the example:</strong>  17.60 seconds
+( 0 minutes  17.60 seconds)</p>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="related">
+      <h3>Navigation</h3>
+      <ul>
+        <li class="right" style="margin-right: 10px">
+          <a href="../np-modindex.html" title="Python Module Index"
+             >modules</a></li>
+<li><a href="../index.html">NiLearn Home</a> |&nbsp;</li>
+<li><a href="../user_guide.html">User Guide</a> |&nbsp;</li>
+<li><a href="index.html">Examples</a> |&nbsp;</li>
+<li><a href="../modules/reference.html">Reference</a> |&nbsp;</li>
+<li id="navbar-about"><a href="../AUTHORS.html">About</a>|&nbsp;</li>
+<li id="navbar-ecosystem"><a href="http://www.nipy.org/">Nipy ecosystem</a></li>
+ 
+      </ul>
+    </div>
+    <div class="footer">
+            &copy; INRIA Parietal 2010-2013.
+          Created using <a href="http://sphinx.pocoo.org/">Sphinx</a> 1.1.3.
+        <span style="padding-left: 5ex;">
+          <a href="../_sources/auto_examples/plot_adhd_tangent.txt"
+        	 rel="nofollow">Show this page source</a>
+        </span>
+    </div>
+  </body>
+</html>

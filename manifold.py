@@ -1,83 +1,201 @@
+import sys
 import warnings
+from StringIO import StringIO
 
 import numpy as np
-from numpy.testing import assert_array_less, assert_array_almost_equal
 from scipy import linalg
 
 
 def my_stack(arrays):
-    return np.concatenate([a[np.newaxis] for a in arrays])
+    """Stack arrays on the first axis.
+
+    Parameters
+    ==========
+    arrays: list of numpy.ndarrays
+        All arrays must have the same shape.
+
+    Returns
+    =======
+    stacked: numpy.ndarray
+        The array formed by stacking the given arrays.
+    """
+    stacked = np.concatenate([a[np.newaxis] for a in arrays])
+    return stacked
 
 
 def sqrtm(mat):
     """ Matrix square-root, for symetric positive definite matrices.
-    """
-    vals, vecs = linalg.eigh(mat)
-    return np.dot(vecs * np.sqrt(vals), vecs.T)
 
+    Parameters
+    ==========
+    mat: (M, M) numpy.ndarray
+        2D array to be square rooted. Raise an error if the array is not
+        square.
 
-def inv_sqrtm(mat):
-    """ Inverse of matrix square-root, for symetric positive definite matrices.
+    Returns
+    =======
+    mat_sqrtm: (M, M) numpy.ndarray
+        The symmetric matrix square root of mat.
+
+    Note
+    ====
+    If input matrix is not symmetric positive definite, no error is reported
+    but results will be wrong.
     """
+    if mat.ndim != 2 or mat.shape[0] != mat.shape[-1]:
+        raise ValueError('expected a square matrix')
     vals, vecs = linalg.eigh(mat)
-    return np.dot(vecs / np.sqrt(vals), vecs.T)
+    mat_sqrtm = np.dot(vecs * np.sqrt(vals), vecs.T)
+    return mat_sqrtm
 
 
 def inv(mat):
     """ Inverse of matrix, for symmetric positive definite matrices.
+
+    Parameters
+    ==========
+    mat: (M, M) numpy.ndarray
+        2D array to be inverted. Raise an error if the array is not square.
+
+    Returns
+    =======
+    mat_inv: (M, M) numpy.ndarray
+        The inverse matrix of mat.
+
+    Note
+    ====
+    If input matrix is not symmetric positive definite, no error is reported
+    but results will be wrong.
     """
+    if mat.ndim != 2 or mat.shape[0] != mat.shape[-1]:
+        raise ValueError('expected a square matrix')
     vals, vecs = linalg.eigh(mat)
-    return np.dot(vecs / vals, vecs.T)
+    mat_inv = np.dot(vecs / vals, vecs.T)
+    return mat_inv
+
+
+def inv_sqrtm(mat):
+    """ Inverse of matrix square-root, for symetric positive definite matrices.
+
+    Parameters
+    ==========
+    mat: (M, M) numpy.ndarray
+        2D array to be square rooted and inverted. Raise an error if the array
+        is not square.
+
+    Returns
+    =======
+    mat_inv_sqrtm: (M, M) numpy.ndarray
+        The inverse matrix of the symmetric square root of mat.
+
+    Note
+    ====
+    If input matrix is not symmetric positive definite, no error is reported
+    but results will be wrong.
+    """
+    if mat.ndim != 2 or mat.shape[0] != mat.shape[-1]:
+        raise ValueError('expected a square matrix')
+    vals, vecs = linalg.eigh(mat)
+    mat_inv_sqrtm = np.dot(vecs / np.sqrt(vals), vecs.T)
+    return mat_inv_sqrtm
 
 
 def logm(mat):
-    """ Logarithm of matrix, for symetric positive definite matrices
+    """ Logarithm of matrix, for symetric positive definite matrices.
+
+    Parameters
+    ==========
+    mat: (M, M) numpy.ndarray
+        2D array whose logarithm to be computed. Raise an error if the array is
+        not square.
+
+    Returns
+    =======
+    mat_logm: (M, M) numpy.ndarray
+        Matrix logatrithm of mat.
+
+    Note
+    ====
+    If input matrix is not symmetric positive definite, no error is reported
+    but results will be wrong.
     """
+    if mat.ndim != 2 or mat.shape[0] != mat.shape[-1]:
+        raise ValueError('expected a square matrix')
     vals, vecs = linalg.eigh(mat)
-    return np.dot(vecs * np.log(vals), vecs.T)
+    mat_logm = np.dot(vecs * np.log(vals), vecs.T)
+    return mat_logm
 
 
 def expm(mat):
-    """ Exponential of matrix, for real symetric matrices
+    """ Exponential of matrix, for real symmetric matrices.
+
+    Parameters
+    ==========
+    mat: (M, M) numpy.ndarray
+        2D array whose exponential to be computed. Raise an error if the array is
+        not square.
+
+    Returns
+    =======
+    mat_exp: (M, M) numpy.ndarray
+        Matrix exponential of mat.
+
+    Note
+    ====
+    If input matrix is not real symmetric, no error is reported but results
+    will be wrong.
     """
-    try:
-        assert_array_almost_equal(mat, mat.T)
-        assert(np.all(np.isreal(mat)))
-    except AssertionError:
-        raise ValueError("at least one matrix is not real symmetric")
+    if mat.ndim != 2 or mat.shape[0] != mat.shape[-1]:
+        raise ValueError('expected a square matrix')
     vals, vecs = linalg.eigh(mat)
-    return np.dot(vecs * np.exp(vals), vecs.T)
+    mat_exp = np.dot(vecs * np.exp(vals), vecs.T)
+    return mat_exp
 
 
-def tangent_space_norm(v, p):
-    """ Norm of vector v in the tangent space at point p"""
-    p_inv = inv(p)
-    return np.sqrt(np.trace(p_inv.dot(v).dot(p_inv).dot(v)))
+def is_spd(M, decimal=15, out=sys.stdout):
+    """Assert that input matrix is symmetric positive definite.
 
+    M must be symmetric down to specified decimal places and with no complex
+    entry.
+    The positive definiteness check is performed by checking that all
+    eigenvalues are positive.
 
-def log_map(x, displacement, mean=False):
-    """ The Riemannian log map at point 'displacement'.
+    Parameters
+    ==========
+    M: numpy.ndarray
+        matrix.
 
-    See Algorithm 2 of:
-        P. Thomas Fletcher, Sarang Joshi. Riemannian Geometry for the
-        Statistical Analysis of Diffusion Tensor Data. Signal Processing, 2007.
+    Returns
+    =======
+    is_spd: boolean
+        True if matrix is symmetric positive definite, False otherwise.
     """
-    vals, vecs = linalg.eigh(displacement)
-    sqrt_vals = np.sqrt(vals)
-    whitening = (vecs / sqrt_vals).T
-    vals_y, vecs_y = linalg.eigh(whitening.dot(x).dot(whitening.T))
-    sqrt_displacement = (vecs * sqrt_vals).dot(vecs_y)
-    return (sqrt_displacement * np.log(vals_y)).dot(sqrt_displacement.T)
+    if np.any(np.isnan(M)) or np.any(np.isinf(M)):
+        out.write("matrix has nan or inf entery")
+        return False
+    if not np.allclose(M, M.T, atol=0.1 ** decimal):
+        out.write("matrix not symmetric to {0} decimals".format(decimal))
+        return False
+    if np.any(np.iscomplex(M)):
+        out.write("matrix has a non real value {0}".format(
+            M[np.iscomplex(M)][0]))
+        return False
+    eigvalsh = np.linalg.eigvalsh(M)
+    ispd = eigvalsh.min() > 0
+    if not ispd:
+        out.write("matrix has a negative eigenvalue: {0:.3f}".format(
+            eigvalsh.min()))
+    return ispd
 
 
-def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
-    """ Computes Frechet mean of a list of symmetric positive definite
+def geometric_mean(mats, max_iter=10, tol=1e-7):
+    """ Computes the geometric mean of a list of symmetric positive definite
     matrices.
 
     Minimization of the objective function by an intrinsic gradient descent in
-    the manifold: moving from the current point fre to the next one is
+    the manifold: moving from the current point geo to the next one is
     done along a short geodesic arc in the opposite direction of the covariant
-    derivative of the objective function evaluated at point fre.
+    derivative of the objective function evaluated at point geo.
 
     See Algorithm 3 of:
         P. Thomas Fletcher, Sarang Joshi. Riemannian Geometry for the
@@ -85,7 +203,7 @@ def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
 
     Parameters
     ==========
-    mats: list of array
+    mats: list of numpy.array
         list of symmetric positive definite matrices, same shape.
     max_iter: int, optional
         maximal number of iterations.
@@ -94,72 +212,70 @@ def frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=False):
 
     Returns
     =======
-    fre: array
-        Frechet mean of the matrices.
+    geo: numpy.array
+        Geometric mean of the matrices.
     """
-    # Real, symmetry and positive definiteness check
+    # Shape and symmetry positive definiteness checks
     for mat in mats:
-        try:
-            assert_array_almost_equal(mat, mat.T)
-            assert(np.all(np.isreal(mat)))
-            assert_array_less(0.0, np.linalg.eigvalsh(mat))
-        except AssertionError:
-            raise ValueError("at least one matrix is not real spd")
-
-    mats = my_stack(mats)
+        out = StringIO()
+        if mat.ndim != 2 or mat.shape[0] != mat.shape[-1]:
+            raise ValueError('at least one array is not square')
+        if not is_spd(mat, out=out):
+            output = out.getvalue().strip()
+            raise ValueError("at least one matrix is not real spd:" + output)
 
     # Initialization
-    fre = np.mean(mats, axis=0)
+    mats = my_stack(mats)
+    geo = np.mean(mats, axis=0)
     tolerance_reached = False
     norm_old = np.inf
     step = 1.
+
+    # Gradient descent
     for n in xrange(max_iter):
-        vals_fre, vecs_fre = linalg.eigh(fre)
-        fre_inv_sqrt = (vecs_fre / np.sqrt(vals_fre)).dot(vecs_fre.T)
-        eighs = [linalg.eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for
+        # Computation of the gradient
+        vals_geo, vecs_geo = linalg.eigh(geo)
+        geo_inv_sqrt = (vecs_geo / np.sqrt(vals_geo)).dot(vecs_geo.T)
+        eighs = [linalg.eigh(geo_inv_sqrt.dot(mat).dot(geo_inv_sqrt)) for
                  mat in mats]
-
-        # Log map of mats[n] at point fre is
-        # sqrtm(fre).dot(logms[n]).dot(sqrtm(fre))
-        logms = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs in eighs]
-
-        # Covariant derivative is fre.dot(logms_mean)
-        logms_mean = np.mean(logms, axis=0)
+        logs = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs in eighs]
+        logs_mean = np.mean(logs, axis=0)  # Covariant derivative is
+                                           # - geo.dot(logms_mean)
         try:
-            assert np.all(np.isfinite(logms_mean))
+            assert np.all(np.isfinite(logs_mean))
         except AssertionError:
             raise FloatingPointError("Nan value after logarithm operation")
+        norm = np.linalg.norm(logs_mean)  # Norm of the covariant derivative on
+                                          # the tangent space at point geo
 
-        vals_log, vecs_log = linalg.eigh(logms_mean)
+        # Update of the minimizer
+        vals_log, vecs_log = linalg.eigh(logs_mean)
+        geo_sqrt = (vecs_geo * np.sqrt(vals_geo)).dot(vecs_geo.T)
+        geo = geo_sqrt.dot(vecs_log * np.exp(vals_log * step)).dot(
+            vecs_log.T).dot(geo_sqrt)  # Move along the geodesic with step size
+                                       # step
 
-        # Move along the geodesic with stepsize step
-        fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
-        fre = fre_sqrt.dot(
-            vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
-
-        # Norm of the covariant derivative on the tangent space at point fre
-        norm = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
-        if tol is not None and norm < tol:
-            tolerance_reached = True
-            break
-
+        # Update the norm and the step size
+        if norm < norm_old:
+            norm_old = norm
         if norm > norm_old:
             step = step / 2.
             norm = norm_old
-        if norm < norm_old and adaptative:
-            step = 2. * step
+        if tol is not None and norm / geo.size < tol:
+            tolerance_reached = True
+            break
 
     if tol is not None and not tolerance_reached:
-        warnings.warn("Maximum number of iterations reached without")  # +\
-#                      " getting to the requested tolerance level.")
+        warnings.warn("Maximum number of iterations reached without" +\
+                      " getting to the requested tolerance level.")
 
-    return fre
+    return geo
 
 
-def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
-    """ Returns at each iteration step of the frechet_mean algorithm the norm
+def grad_geometric_mean(mats, max_iter=10, tol=1e-7):
+    """ Returns at each iteration step of the geometric_mean algorithm the norm
     of the covariant derivative. Norm is intrinsic norm on the tangent space at
-    the Frechet mean at the current step.
+    the geometric mean at the current step.
 
     Parameters
     ==========
@@ -175,124 +291,45 @@ def grad_frechet_mean(mats, max_iter=10, tol=1e-3, adaptative=True):
     grad_norm: list of float
         Norm of the covariant derivative in the tangent space at each step.
     """
-    # Real, symmetry and positive definiteness check
-    for mat in mats:
-        print mat.shape
-        try:
-#            assert(is_spd(mat)) # TODO: replace by assert(is_spd(mat)) and test
-            assert_array_almost_equal(mat, mat.T)
-            assert(np.all(np.isreal(mat)))
-            assert_array_less(0.0, np.linalg.eigvalsh(mat))
-        except AssertionError:
-            raise ValueError("at least one matrix is not real spd")
-
     mats = my_stack(mats)
 
     # Initialization
-    fre = np.mean(mats, axis=0)
+    geo = np.mean(mats, axis=0)
     norm_old = np.inf
     step = 1.
-    tolerance_reached = False
     grad_norm = []
     for n in xrange(max_iter):
-        vals_fre, vecs_fre = linalg.eigh(fre)
-        fre_inv_sqrt = (vecs_fre / np.sqrt(vals_fre)).dot(vecs_fre.T)
-        eighs = [linalg.eigh(fre_inv_sqrt.dot(mat).dot(fre_inv_sqrt)) for
+        # Computation of the gradient
+        vals_geo, vecs_geo = linalg.eigh(geo)
+        geo_inv_sqrt = (vecs_geo / np.sqrt(vals_geo)).dot(vecs_geo.T)
+        eighs = [linalg.eigh(geo_inv_sqrt.dot(mat).dot(geo_inv_sqrt)) for
                  mat in mats]
-
-        # Log map of mats[n] at point fre is
-        # sqrtm(fre).dot(logms[n]).dot(sqrtm(fre))
-        logms = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs in eighs]
-
-        # Covariant derivative is fre.dot(logms_mean)
-        logms_mean = np.mean(logms, axis=0)
+        logs = [(vecs * np.log(vals)).dot(vecs.T) for vals, vecs in eighs]
+        logs_mean = np.mean(logs, axis=0)  # Covariant derivative is
+                                           # - geo.dot(logms_mean)
         try:
-            assert np.all(np.isfinite(logms_mean))
+            assert np.all(np.isfinite(logs_mean))
         except AssertionError:
             raise FloatingPointError("Nan value after logarithm operation")
+        norm = np.linalg.norm(logs_mean)  # Norm of the covariant derivative on
+                                          # the tangent space at point geo
 
-        vals_log, vecs_log = linalg.eigh(logms_mean)
+        # Update of the minimizer
+        vals_log, vecs_log = linalg.eigh(logs_mean)
+        geo_sqrt = (vecs_geo * np.sqrt(vals_geo)).dot(vecs_geo.T)
+        geo = geo_sqrt.dot(vecs_log * np.exp(vals_log * step)).dot(
+            vecs_log.T).dot(geo_sqrt)  # Move along the geodesic with step size
+                                       # step
 
-        # Move along the geodesic with stepsize step
-        fre_sqrt = (vecs_fre * np.sqrt(vals_fre)).dot(vecs_fre.T)
-        fre = fre_sqrt.dot(
-            vecs_log * np.exp(vals_log * step)).dot(vecs_log.T).dot(fre_sqrt)
-
-        # Norm of the covariant derivative on the tangent space at point fre
-        norm = np.sqrt(np.trace(logms_mean.dot(logms_mean)))
-        grad_norm.append(norm)
-        if tol is not None and norm < tol:
-            tolerance_reached = True
-            break
-
+        # Update the norm and the step size
+        if norm < norm_old:
+            norm_old = norm
         if norm > norm_old:
             step = step / 2.
             norm = norm_old
 
-    if tol is not None and not tolerance_reached:
-        warnings.warn("Maximum number of iterations reached without")  # +\
-#                      " getting to the requested tolerance level.")
+        grad_norm.append(norm / geo.size)
+        if tol is not None and norm / geo.size < tol:
+            break
 
     return grad_norm
-
-
-def random_diagonal(shape, d_min=0., d_max=1.):
-    """Generates random diagonal matrix, with elements in the range
-    [d_min, d_max]
-    """
-    d = np.random.rand(shape) * (d_max - d_min) + d_min
-    return np.diag(d)
-
-
-def random_diagonal_spd(shape, d_min=1., d_max=2.):
-    """Generates random positive definite diagonal matrix"""
-    assert(d_min > 0)
-    assert(d_max > 0)
-    return random_diagonal(shape, d_min, d_max)
-
-
-def random_spd(shape, eig_min=1.0, eig_max=2.0):
-    """Generates random symmetric positive definite matrix"""
-    ran = np.random.rand(shape, shape)
-    q, _ = linalg.qr(ran)
-    d = random_diagonal_spd(shape, eig_min, eig_max)
-    return q.dot(d).dot(q.T)
-
-
-def random_non_singular(shape):
-    """Generates random non singular matrix"""
-    d = random_diagonal_spd(shape)
-    ran1 = np.random.rand(shape, shape)
-    ran2 = np.random.rand(shape, shape)
-    u, _ = linalg.qr(ran1)
-    v, _ = linalg.qr(ran2)
-    return u.dot(d).dot(v.T)
-
-
-def is_spd(M, decimal=15):
-    """Assert that input matrix is real symmetric positive definite.
-
-    M must be symmetric down to specified decimal places and with no complex
-    entry.
-    The check is performed by checking that all eigenvalues are positive.
-
-    Parameters
-    ==========
-    M: numpy.ndarray
-        matrix.
-
-    Returns
-    =======
-    answer: boolean
-        True if matrix is symmetric real positive definite, False otherwise.
-    """
-    if not np.allclose(M, M.T, atol=0.1 ** decimal):
-        print("matrix not symmetric to {0} decimals".format(decimal))
-        return False
-    if np.all(np.iscomplex(M)):
-        print("matrix has a non real value {0}".format(M[np.iscomplex(M)][0]))
-    eigvalsh = np.linalg.eigvalsh(M)
-    ispd = eigvalsh.min() > 0
-    if not ispd:
-        print("matrix has a negative eigenvalue: %.3f" % eigvalsh.min())
-    return ispd

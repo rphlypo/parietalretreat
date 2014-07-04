@@ -3,7 +3,7 @@ import matplotlib.pyplot as plt
 import xml.etree.ElementTree as xml_et
 import numpy as np
 from mayavi import mlab
-from nipy.labs.viz_tools import maps_3d
+#from nipy.labs.viz_tools import maps_3d
 import joblib
 # Major scientific library imports
 from scipy import stats
@@ -14,9 +14,9 @@ from matplotlib import mlab as mlab2
 import re
 
 # Neuroimaging library imports
-from nipy.labs import viz3d
+#from nipy.labs import viz3d
 
-from parietal.learn.covariance.viz3d import plot_graph
+#from parietal.learn.covariance.viz3d import plot_graph
 #from parietal.learn.covariance.viz import plot_correlation
 
 
@@ -97,6 +97,7 @@ def get_labels(atlas_name="HarvardOxford"):
 
 def plot_adjacency(G,
                    atlas_name="HarvardOxford",
+                   labels=None,
                    lateralised=True,
                    trim=True,
                    col_map=None,
@@ -115,31 +116,33 @@ def plot_adjacency(G,
     else:
         cmap = plt.cm.hot_r
     p = G.shape[0]
-    labels = get_labels(atlas_name)
-    if lateralised:
-        G, labels = group_lateral(G, labels)
-    if trim:
-        labels = trim_label(abbreviate_labels(labels))
-    if n_clusters is None:
-        n_clusters, cluster_labels = nb_clusters(G)
-    if n_clusters > 1:
-        AC = cluster.AgglomerativeClustering(affinity='precomputed',
-                                             compute_full_tree=True,
-                                             linkage='complete',
-                                             n_clusters=n_clusters)
-        cluster_labels = AC.fit(1 - G).labels_
-        ix = np.argsort(cluster_labels, kind="mergesort")
-        G = G[np.ix_(ix, ix)]
-        labels = [labels[ii] for ii in ix]
+    if labels is None:
+        labels = get_labels(atlas_name)
+        if lateralised:
+            G, labels = group_lateral(G, labels)
+        if trim:
+            labels = trim_label(abbreviate_labels(labels))
+        if n_clusters is None:
+            n_clusters, cluster_labels = nb_clusters(G)
+        if n_clusters > 1:
+            AC = cluster.AgglomerativeClustering(affinity='precomputed',
+                                                 compute_full_tree=True,
+                                                 linkage='complete',
+                                                 n_clusters=n_clusters)
+            cluster_labels = AC.fit(1 - G).labels_
+            ix = np.argsort(cluster_labels, kind="mergesort")
+            G = G[np.ix_(ix, ix)]
+            labels = [labels[ii] for ii in ix]
+        else:
+            cluster_labels = list(np.zeros((p,)))
     else:
-        cluster_labels = list(np.zeros((p,)))
-
+        cluster_labels = labels
     if not plot_figure:
         return cluster_labels
     fig = plt.figure()
     if vmin is None and vmax is None:
         vmax = np.max(np.abs(G))
-        vmax += 0.1 * (vmax < 0.1)
+        vmax += 0.05 * (vmax < 0.05)
         vmin = -vmax
     plt.imshow(G, vmin=vmin, vmax=vmax, interpolation='nearest',
                cmap=cmap)
@@ -156,9 +159,11 @@ def plot_adjacency(G,
     plt.colorbar()
     if title is not None:
         plt.suptitle(title)
-    plt.show()
+    print fig_name
+#    plt.show()
     if fig_name:
         fig.savefig(fig_name, bbox_inches='tight')
+        print "saved"
         plt.close(fig)
     return cluster_labels
 

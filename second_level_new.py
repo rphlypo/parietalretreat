@@ -99,7 +99,7 @@ class Comparison(object):
         return t, pval
 
     def signif_baseline(self, th=0.05):
-        t, pval = self.stats_baseline(self.subj_axis)
+        t, pval = self.stats_baseline()
         return get_signif_effect(self._baseline.mean(self.subj_axis),pval,th)        
         
     def stats_follow_up(self, axis=0):
@@ -110,7 +110,7 @@ class Comparison(object):
         return t, pval
       
     def signif_follow_up(self, th=0.05):
-        t, pval = self.stats_follow_up(self.subj_axis)
+        t, pval = self.stats_follow_up()
         return get_signif_effect(self._follow_up.mean(self.subj_axis),pval,th)  
         
     def stats_difference(self):
@@ -125,9 +125,9 @@ class Comparison(object):
         return t, pval 
 
     def signif_difference(self, th=0.05):        
-        t, pval1 = self.stats_baseline(self.subj_axis)
-        t, pval2 = self.stats_follow_up(self.subj_axis)
-        t, pval = self.stats_difference(self.subj_axis)     
+        t, pval1 = self.stats_baseline()
+        t, pval2 = self.stats_follow_up()
+        t, pval = self.stats_difference()     
         pval_all = np.maximum(np.minimum(pval1,pval2),pval)
         effect = self._follow_up.mean(
         self.subj_axis)-self._baseline.mean(self.subj_axis)

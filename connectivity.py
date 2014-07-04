@@ -8,24 +8,23 @@ import manifold as spd_mfd
 
 
 def sym_to_vec(sym, isometry=True):
-    """ Returns the lower triangular part of
-    sqrt(2) sym + (1-sqrt(2)) * diag(sym),
+    """Returns the flattened lower triangular part of an array.
 
-    sqrt(2) * offdiag(sym) + np.diag(np.diag(sym))
-
-    shape n (n+1) /2, with n = sym.shape[0]
+    If isometry is True, the off-diagonal terms are multiplied by sqrt(2).
+    Acts on the last two dimensions of the array.
 
     Parameters
     ==========
-    sym: array
-        shape (..., n, n)
+    sym: numpy.ndarray
+        Input array, shape (..., n, n).
     isometry: bool, optional, default to True
-        used map is an isometry or not
+        Off diagonal terms of sym are multiplied by sqrt(2) if True.
 
     Returns
     =======
-    vec: array
-        shape (..., n * (n+1) /2)
+    numpy.ndarray
+        The output flattened lower triangular part, shape
+        (..., n * (n + 1) /2).
     """
     p = sym.shape[-1]
     tril_mask = np.tril(np.ones(sym.shape[-2:])).astype(np.bool)
@@ -38,7 +37,25 @@ def sym_to_vec(sym, isometry=True):
 
 
 def vec_to_sym(vec, isometry=True):
-    n = vec.size
+    """Returns the symmetric 2D array given its flattened lower triangular
+    part.
+
+    If isometry is True, divides the off-diagonal terms by sqrt(2).
+    Acts on the last dimension of the array.
+
+    Parameters
+    ==========
+    vec: numpy.ndarray
+        The input array, shape (..., p * (p + 1) /2).
+    isometry: bool, optional, default to True
+        Off diagonal terms of sym are divided by sqrt(2) if True.
+
+    Returns
+    =======
+    sym: numpy.ndarray
+        The output symmetric array, shape (..., p, p).
+    """
+    n = vec.shape[-1]
     # solve p * (p + 1) / 2 = n subj. to p > 0
     # p ** 2 + p - 2n = 0 & p > 0
     # p = - 1 / 2 + sqrt( 1 + 8 * n) / 2
@@ -52,9 +69,9 @@ def vec_to_sym(vec, isometry=True):
     p = int(p)
     tril_mask = np.tril(np.ones((p, p))).astype(np.bool)
     off_diag_mask = (np.ones((p, p)) - np.eye(p)).astype(np.bool)
-    sym = np.zeros((p, p), dtype=np.float)
+    sym = np.zeros(vec.shape[:-1] + (p, p), dtype=np.float)
     sym[..., tril_mask] = vec
-    sym.T[..., tril_mask] = vec
+    (sym.swapaxes(-1, -2))[..., tril_mask] = vec
     if isometry:
         sym[..., off_diag_mask] /= np.sqrt(2)
 
@@ -62,36 +79,111 @@ def vec_to_sym(vec, isometry=True):
 
 
 def cov_to_corr(cov):
-    return cov * np.diag(cov) ** (-1. / 2) *\
-        (np.diag(cov) ** (-1. / 2))[..., np.newaxis]
+    """Returns correlation matrix for a given covariance matrix.
+
+    Parameters
+    ==========
+    cov: numpy.ndarray
+        The 2-D input array, covariance matrix.
+
+    Returns
+    =======
+    corr: numpy.ndarray
+        The 2-D ouput array, correlation matrix.
+    """
+    d = np.diag(cov)
+    corr = cov * d ** (-1. / 2) * (d ** (-1. / 2))[..., np.newaxis]
+    return corr
 
 
 def prec_to_partial(prec):
+    """Returns partial correlation matrix for a given precision matrix.
+
+    Parameters
+    ==========
+    prec: numpy.ndarray
+        The 2D input array, precision matrix.
+
+    Returns
+    =======
+    partial: numpy.ndarray
+        The 2D ouput array, partial correlation matrix.
+    """
     partial = -cov_to_corr(prec)
     np.fill_diagonal(partial, 1.)
     return partial
 
 
 class CovEmbedding(BaseEstimator, TransformerMixin):
-    """ Tranformer that returns the coefficients on a flat space to
+    """
+    Tranformer that returns the coefficients on a flat space to
     perform the analysis.
+
+    Parameters
+    ----------
+    cov_estimator: estimator object, optional
+        The covariance estimator.
+    kind: {"correlation", "partial correlation", "tangent", "precision"}
+        optional
+        The connectivity measure, default to "tangent".
+
+    Attributes
+    ----------
+    `cov_estimator_` : estimator object
+        A new covariance estimator with the same parameters as cov_estimator.
+
+    `mean_cov_` : numpy.ndarray
+        The geometric mean of the covariance matrices.
+
+    `whitening_` : numpy.ndarray
+        The inverted square-rooted geometric mean.
     """
 
-    def __init__(self, cov_estimator=None, kind='tangent'):
+    def __init__(self, cov_estimator=None, kind=None):
         self.cov_estimator = cov_estimator
         self.kind = kind
 
     def fit(self, X, y=None):
+        """Fits the group sparse precision model according to the given
+        training data and parameters.
+
+        Parameters
+        ----------
+        X: list of numpy.ndarray with shapes (n_samples, n_features)
+            The input subjects.
+
+        Attributes
+        ----------
+        `cov_estimator_` : estimator object
+            A new covariance estimator with the same parameters as
+            cov_estimator.
+
+        `mean_cov_` : numpy.ndarray
+            The geometric mean of the covariance matrices.
+
+        `whitening_` : numpy.ndarray
+            The inverted square-rooted geometric mean.
+
+        Returns
+        -------
+        self : CovEmbedding instance
+            The object itself. Useful for chaining operations.
+        """
+
         if self.cov_estimator is None:
             self.cov_estimator_ = EmpiricalCovariance(
                 assume_centered=True)
         else:
             self.cov_estimator_ = clone(self.cov_estimator)
 
-        if self.kind == 'tangent':
+        if self.kind is None:
+            self.kind = 'covariance'
+        elif self.kind == 'tangent':
             covs = [self.cov_estimator_.fit(x).covariance_ for x in X]
-            self.mean_cov_ = spd_mfd.frechet_mean(covs, max_iter=30, tol=1e-7)
+            self.mean_cov_ = spd_mfd.geometric_mean(covs, max_iter=30,
+                                                    tol=1e-7)
             self.whitening_ = spd_mfd.inv_sqrtm(self.mean_cov_)
+
         return self
 
     def transform(self, X):
@@ -99,17 +191,19 @@ class CovEmbedding(BaseEstimator, TransformerMixin):
 
         Parameters
         ----------
-        covs: list of array
-            list of covariance matrices, shape (n_rois, n_rois)
+        X: list of numpy.ndarray with shapes (n_samples, n_features)
+            The input subjects.
 
         Returns
         -------
-        list of array, transformed covariance matrices,
-        shape (n_rois * (n_rois+1)/2,)
+        numpy.ndarray, transformed covariance matrices, shape
+            (len(X), n_features * (n_features + 1) / 2, )
         """
         covs = [self.cov_estimator_.fit(x).covariance_ for x in X]
         covs = spd_mfd.my_stack(covs)
-        if self.kind == 'tangent':
+        if self.kind == 'covariance':
+            pass
+        elif self.kind == 'tangent':
             covs = [spd_mfd.logm(self.whitening_.dot(c).dot(self.whitening_))
                     for c in covs]
         elif self.kind == 'precision':

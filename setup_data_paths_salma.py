@@ -164,13 +164,13 @@ def run(root_dir="/", dump_dir=None, data_set=None, n_jobs=1, maps_img=None):
 #                          "HarvardOxford-cortl-prob-2mm.nii.gz")
     if maps_img is None:
         maps_img = os.path.join("/volatile/new/salma/conn/genereated_rois",
-                                "Visual_AN_DMN_labels.nii")
+                                "Visual_AN_DMN.nii")
     nmm = NiftiMapsMasker(
         maps_img=maps_img,
         mask_img=mask_img, detrend=True, smoothing_fwhm=5, standardize=True,
         low_pass=None, high_pass=None, memory=mem, verbose=10)
     region_ts = Parallel(n_jobs=n_jobs)(
-        delayed(_data_fitting)(niimg, nmm, n_hv_confounds=None)  # TODO: reset to 5
+        delayed(_data_fitting)(niimg, nmm, n_hv_confounds=5)
         for niimg in list(df["func"]))
 #   joblib.dump(region_ts,
 #               os.path.join(dump_dir, "results.pkl"))
